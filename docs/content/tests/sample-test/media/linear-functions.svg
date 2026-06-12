@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 250" role="img" aria-labelledby="title desc">
+  <title id="title">Four coordinate graphs</title>
+  <desc id="desc">Graphs A through D show a parabola, a circle, a straight line, and a curved function.</desc>
+  <rect width="960" height="250" rx="20" fill="#f8faff"/>
+  <g font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#12213f" text-anchor="middle">
+    <text x="120" y="32">A</text>
+    <text x="360" y="32">B</text>
+    <text x="600" y="32">C</text>
+    <text x="840" y="32">D</text>
+  </g>
+  <g stroke="#dce2ec" stroke-width="1">
+    <path d="M20 55H220M20 85H220M20 115H220M20 145H220M20 175H220M20 205H220M40 45V220M70 45V220M100 45V220M130 45V220M160 45V220M190 45V220"/>
+    <path d="M260 55H460M260 85H460M260 115H460M260 145H460M260 175H460M260 205H460M280 45V220M310 45V220M340 45V220M370 45V220M400 45V220M430 45V220"/>
+    <path d="M500 55H700M500 85H700M500 115H700M500 145H700M500 175H700M500 205H700M520 45V220M550 45V220M580 45V220M610 45V220M640 45V220M670 45V220"/>
+    <path d="M740 55H940M740 85H940M740 115H940M740 145H940M740 175H940M740 205H940M760 45V220M790 45V220M820 45V220M850 45V220M880 45V220M910 45V220"/>
+  </g>
+  <g stroke="#5b6780" stroke-width="2">
+    <path d="M20 130H220M120 45V220M260 130H460M360 45V220M500 130H700M600 45V220M740 130H940M840 45V220"/>
+  </g>
+  <g fill="none" stroke="#2458d3" stroke-width="5" stroke-linecap="round">
+    <path d="M65 70C85 190 155 190 175 70"/>
+    <circle cx="360" cy="130" r="62"/>
+    <path d="M525 190L675 65"/>
+    <path d="M770 195C805 195 805 135 840 130C875 125 875 65 910 65"/>
+  </g>
+</svg>

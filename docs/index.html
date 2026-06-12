@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+      name="description"
+      content="A static, browser-based platform for practice tests."
+    >
+    <title>OpenTest</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="./assets/css/styles.css">
+    <script type="module" src="./assets/js/public/app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <header class="site-header">
+      <div class="site-header__inner page-width">
+        <a class="brand" href="./" aria-label="OpenTest home">
+          <span class="brand__mark" aria-hidden="true">O</span>
+          <span>OpenTest</span>
+        </a>
+
+        <nav class="site-nav" aria-label="Primary navigation">
+          <a href="./">Available tests</a>
+          <a href="#about">About</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content" class="site-main" tabindex="-1">
+      <div class="page-width">
+        <div id="app" aria-live="polite" aria-busy="true">
+          <section class="status-panel" aria-labelledby="loading-title">
+            <span class="loading-indicator" aria-hidden="true"></span>
+            <div>
+              <p class="status-panel__label">Loading</p>
+              <h1 id="loading-title">Preparing the test library</h1>
+              <p>Fetching the latest catalog from this site.</p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer id="about" class="site-footer">
+      <div class="site-footer__inner page-width">
+        <p>Static test platform</p>
+        <p>No account required</p>
+      </div>
+    </footer>
+
+    <noscript>
+      <div class="noscript-message">
+        OpenTest requires JavaScript to load the test catalog.
+      </div>
+    </noscript>
+  </body>
+</html>

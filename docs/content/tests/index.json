@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "tests": [
+    {
+      "id": "sample-test",
+      "title": "Sample Admission Test",
+      "description": "Mathematics, analytical thinking, and English practice.",
+      "file": "sample-test/test.json",
+      "language": "en",
+      "sectionCount": 3,
+      "questionCount": 6,
+      "published": true
+    }
+  ]
+}

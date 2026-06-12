@@ -1,0 +1,147 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import { createQuestionFlow } from "../docs/assets/js/core/question-flow.js";
+import { calculateResult } from "../docs/assets/js/core/scoring.js";
+import {
+  validateCatalog,
+  validateTest,
+} from "../docs/assets/js/core/test-validator.js";
+
+function createTest() {
+  return {
+    schemaVersion: 1,
+    id: "dynamic-test",
+    version: 1,
+    title: "Dynamic test",
+    description: "A validation fixture.",
+    language: "en",
+    instructions: "Choose one answer.",
+    headerLinks: [],
+    sections: [
+      {
+        id: "first",
+        title: "First section",
+        questions: [
+          {
+            id: "first-1",
+            type: "single-choice",
+            prompt: "First question",
+            options: [
+              { id: "a", text: "A" },
+              { id: "b", text: "B" },
+            ],
+            correctOptionIds: ["a"],
+            explanation: "A is correct.",
+          },
+        ],
+      },
+      {
+        id: "second",
+        title: "Second section",
+        questions: [
+          {
+            id: "second-1",
+            type: "single-choice",
+            prompt: "Second question",
+            points: 2,
+            options: [
+              { id: "a", text: "A" },
+              { id: "b", text: "B" },
+            ],
+            correctOptionIds: ["b"],
+            explanation: "B is correct.",
+          },
+          {
+            id: "second-2",
+            type: "single-choice",
+            prompt: "Third question",
+            options: [
+              { id: "a", text: "A" },
+              { id: "b", text: "B" },
+            ],
+            correctOptionIds: ["a"],
+            explanation: "A is correct.",
+          },
+        ],
+      },
+    ],
+  };
+}
+
+test("validates safe catalog and test fixtures", () => {
+  const catalog = {
+    schemaVersion: 1,
+    tests: [
+      {
+        id: "dynamic-test",
+        title: "Dynamic test",
+        description: "Fixture",
+        file: "dynamic-test/test.json",
+        published: true,
+      },
+    ],
+  };
+
+  assert.equal(validateCatalog(catalog), catalog);
+  assert.equal(validateTest(createTest()).id, "dynamic-test");
+});
+
+test("rejects unsafe media paths", () => {
+  const fixture = createTest();
+  fixture.sections[0].questions[0].media = {
+    image: {
+      src: "/content/private.png",
+      alt: "Unsafe fixture",
+    },
+  };
+
+  assert.throws(
+    () => validateTest(fixture),
+    /did not pass validation/,
+  );
+});
+
+test("creates a dynamic ordered flow for every section and question", () => {
+  const flow = createQuestionFlow(createTest());
+
+  assert.deepEqual(
+    flow.map(({ section, question }) => [section.id, question.id]),
+    [
+      ["first", "first-1"],
+      ["second", "second-1"],
+      ["second", "second-2"],
+    ],
+  );
+  assert.equal(flow[2].sectionQuestionIndex, 1);
+  assert.equal(flow[2].sectionQuestionCount, 2);
+});
+
+test("scores correct, incorrect, and unanswered answers by section", () => {
+  const result = calculateResult(
+    createTest(),
+    new Map([
+      ["first-1", "a"],
+      ["second-1", "a"],
+    ]),
+  );
+
+  assert.equal(result.earnedPoints, 1);
+  assert.equal(result.totalPoints, 4);
+  assert.equal(result.percentage, 25);
+  assert.deepEqual(result.counts, {
+    correct: 1,
+    incorrect: 1,
+    unanswered: 1,
+  });
+  assert.deepEqual(
+    result.sections.map(({ earnedPoints, totalPoints }) => [
+      earnedPoints,
+      totalPoints,
+    ]),
+    [
+      [1, 1],
+      [0, 3],
+    ],
+  );
+});
