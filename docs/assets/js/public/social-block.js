@@ -16,8 +16,8 @@ function isSafeExternalUrl(value) {
   }
 }
 
-export function renderSocialBlock(test) {
-  const config = test?.socialBlock;
+export function renderSocialBlock(source, id = source?.id || "catalog") {
+  const config = source?.socialBlock;
 
   if (
     !config?.enabled ||
@@ -32,7 +32,7 @@ export function renderSocialBlock(test) {
       link &&
       typeof link.label === "string" &&
       isSafeExternalUrl(link.url) &&
-      SAFE_STYLES.has(link.style),
+      (link.style === undefined || SAFE_STYLES.has(link.style)),
   );
 
   if (links.length === 0) {
@@ -41,10 +41,10 @@ export function renderSocialBlock(test) {
 
   const section = document.createElement("aside");
   section.className = "social-block";
-  section.setAttribute("aria-labelledby", `social-block-${test.id}`);
+  section.setAttribute("aria-labelledby", `social-block-${id}`);
 
   const title = document.createElement("h2");
-  title.id = `social-block-${test.id}`;
+  title.id = `social-block-${id}`;
   title.textContent = config.title;
 
   const list = document.createElement("ul");
@@ -53,7 +53,8 @@ export function renderSocialBlock(test) {
   links.forEach((link) => {
     const item = document.createElement("li");
     const anchor = document.createElement("a");
-    anchor.className = `social-block__link social-block__link--${link.style}`;
+    const style = SAFE_STYLES.has(link.style) ? link.style : "secondary";
+    anchor.className = `social-block__link social-block__link--${style}`;
     anchor.href = link.url;
     anchor.target = "_blank";
     anchor.rel = "noopener noreferrer";

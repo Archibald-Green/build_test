@@ -1,15 +1,15 @@
 import { createQuestionFlow } from "../core/question-flow.js";
 import { createAttemptStorage } from "../core/attempt-storage.js";
-import { calculateAttemptProgress } from "../core/attempt-progress.js?v=20260612-multiple-choice";
+import { calculateAttemptProgress } from "../core/attempt-progress.js?v=20260612-catalog-social";
 import {
   isAnsweredValue,
   normalizeQuestionAnswer,
 } from "../core/answers.js";
-import { t, tn } from "../core/i18n.js?v=20260612-multiple-choice";
-import { calculateResult } from "../core/scoring.js?v=20260612-multiple-choice";
+import { t, tn } from "../core/i18n.js?v=20260612-catalog-social";
+import { calculateResult } from "../core/scoring.js?v=20260612-catalog-social";
 import { resolveWatermark } from "../core/watermark.js";
-import { renderResults } from "./results-view.js?v=20260612-multiple-choice";
-import { renderSocialBlock } from "./social-block.js";
+import { renderResults } from "./results-view.js?v=20260612-catalog-social";
+import { renderSocialBlock } from "./social-block.js?v=20260612-catalog-social";
 
 let mediaCaptionId = 0;
 

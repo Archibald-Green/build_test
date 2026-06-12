@@ -1,4 +1,5 @@
-import { t, tn } from "../core/i18n.js?v=20260612-multiple-choice";
+import { t, tn } from "../core/i18n.js?v=20260612-catalog-social";
+import { renderSocialBlock } from "./social-block.js?v=20260612-catalog-social";
 
 function createTestCard(test) {
   const article = document.createElement("article");
@@ -57,6 +58,12 @@ export function renderCatalog(container, catalog) {
 
   intro.append(title, copy);
   container.append(intro);
+
+  const socialBlock = renderSocialBlock(catalog, "catalog");
+  if (socialBlock) {
+    socialBlock.classList.add("social-block--catalog");
+    container.append(socialBlock);
+  }
 
   const publishedTests = catalog.tests.filter(
     (test) => test.published !== false,

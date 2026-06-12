@@ -1,5 +1,5 @@
 import { AppError } from "./errors.js";
-import { t } from "./i18n.js?v=20260612-multiple-choice";
+import { t } from "./i18n.js?v=20260612-catalog-social";
 
 export async function fetchJson(url, options = {}) {
   const settings =

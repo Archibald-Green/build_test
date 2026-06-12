@@ -1,5 +1,5 @@
-import { en } from "./locales/en.js?v=20260612-multiple-choice";
-import { kk } from "./locales/kk.js?v=20260612-multiple-choice";
+import { en } from "./locales/en.js?v=20260612-catalog-social";
+import { kk } from "./locales/kk.js?v=20260612-catalog-social";
 
 export const DEFAULT_LOCALE = "ru";
 export const UI_LANGUAGE_KEY = "test-platform:ui-language";

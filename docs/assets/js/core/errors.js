@@ -1,4 +1,4 @@
-import { t } from "./i18n.js?v=20260612-multiple-choice";
+import { t } from "./i18n.js?v=20260612-catalog-social";
 
 export class AppError extends Error {
   constructor(message, options = {}) {

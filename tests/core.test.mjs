@@ -99,6 +99,41 @@ test("validates safe catalog and test fixtures", () => {
   assert.equal(validateTest(createTest()).id, "dynamic-test");
 });
 
+test("validates optional catalog social blocks and link styles", () => {
+  const catalog = {
+    schemaVersion: 1,
+    socialBlock: {
+      enabled: true,
+      title: "More tests",
+      links: [
+        {
+          label: "Telegram",
+          url: "https://example.com/channel",
+          style: "telegram",
+        },
+        {
+          label: "Default style",
+          url: "https://example.com/more",
+        },
+      ],
+    },
+    tests: [],
+  };
+
+  assert.equal(validateCatalog(catalog), catalog);
+
+  const olderCatalog = {
+    schemaVersion: 1,
+    tests: [],
+  };
+  assert.equal(validateCatalog(olderCatalog), olderCatalog);
+
+  catalog.socialBlock.links[0].url = "javascript:alert(1)";
+  assert.throws(() => validateCatalog(catalog), {
+    code: "CATALOG_SCHEMA_INVALID",
+  });
+});
+
 test("rejects unsafe media paths", () => {
   const fixture = createTest();
   fixture.sections[0].questions[0].media = {

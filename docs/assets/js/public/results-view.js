@@ -1,8 +1,8 @@
 import {
   formatDateTime,
   t,
-} from "../core/i18n.js?v=20260612-multiple-choice";
-import { renderSocialBlock } from "./social-block.js";
+} from "../core/i18n.js?v=20260612-catalog-social";
+import { renderSocialBlock } from "./social-block.js?v=20260612-catalog-social";
 
 const STATUS_META = {
   correct: {

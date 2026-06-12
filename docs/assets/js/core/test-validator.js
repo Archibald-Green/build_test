@@ -1,5 +1,5 @@
 import { AppError } from "./errors.js";
-import { t } from "./i18n.js?v=20260612-multiple-choice";
+import { t } from "./i18n.js?v=20260612-catalog-social";
 
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SUPPORTED_SCHEMA_VERSION = 1;
@@ -98,7 +98,10 @@ function validateSocialBlock(socialBlock, issues) {
     if (!isSafeExternalUrl(link.url)) {
       issues.push(t("validation.socialUrl", { path }));
     }
-    if (!SUPPORTED_SOCIAL_STYLES.has(link.style)) {
+    if (
+      link.style !== undefined &&
+      !SUPPORTED_SOCIAL_STYLES.has(link.style)
+    ) {
       issues.push(t("validation.socialStyle", { path }));
     }
   });
@@ -319,6 +322,8 @@ export function validateCatalog(catalog) {
     issues.push(t("validation.testsArray"));
     throwValidationError(t("validation.catalogName"), issues);
   }
+
+  validateSocialBlock(catalog.socialBlock, issues);
 
   const seenIds = new Set();
 

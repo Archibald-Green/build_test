@@ -1,5 +1,26 @@
 {
   "schemaVersion": 1,
+  "socialBlock": {
+    "enabled": true,
+    "title": "Дополнительные бесплатные тесты в Telegram-канале",
+    "links": [
+      {
+        "label": "Telegram-канал",
+        "url": "https://example.com",
+        "style": "telegram"
+      },
+      {
+        "label": "WhatsApp",
+        "url": "https://example.com",
+        "style": "whatsapp"
+      },
+      {
+        "label": "Telegram лично",
+        "url": "https://example.com",
+        "style": "telegram"
+      }
+    ]
+  },
   "tests": [
     {
       "id": "sample-test",
