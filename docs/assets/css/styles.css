@@ -716,17 +716,25 @@ button,
 
 .question-nav-button.is-answered::after {
   position: absolute;
-  top: 0.3rem;
-  right: 0.3rem;
-  width: 0.38rem;
-  height: 0.38rem;
+  top: 0.18rem;
+  right: 0.22rem;
+  display: grid;
+  width: 0.78rem;
+  height: 0.78rem;
+  place-items: center;
   border-radius: 50%;
   background: var(--color-success);
-  content: "";
+  color: #fff;
+  content: "\2713";
+  font-size: 0.55rem;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .question-nav-button.is-answered:not(.is-current) {
   border-color: #83bba8;
+  background: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 .question-nav-button.is-current {
@@ -738,6 +746,7 @@ button,
 
 .question-nav-button.is-current.is-answered::after {
   background: #fff;
+  color: var(--color-accent);
 }
 
 .runner-sidebar__note {

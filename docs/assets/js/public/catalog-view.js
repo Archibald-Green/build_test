@@ -1,3 +1,5 @@
+import { t, tn } from "../core/i18n.js";
+
 function createTestCard(test) {
   const article = document.createElement("article");
   article.className = "test-card";
@@ -17,25 +19,23 @@ function createTestCard(test) {
 
   const metadataParts = [];
   if (Number.isInteger(test.sectionCount)) {
-    metadataParts.push(
-      `${test.sectionCount} ${test.sectionCount === 1 ? "section" : "sections"}`,
-    );
+    metadataParts.push(tn("catalog.section", test.sectionCount));
   }
   if (Number.isInteger(test.questionCount)) {
-    metadataParts.push(
-      `${test.questionCount} ${test.questionCount === 1 ? "question" : "questions"}`,
-    );
+    metadataParts.push(tn("catalog.question", test.questionCount));
   }
   metadata.textContent =
-    metadataParts.length > 0 ? metadataParts.join(" \u00b7 ") : "Practice test";
+    metadataParts.length > 0
+      ? metadataParts.join(" \u00b7 ")
+      : t("catalog.practiceTest");
 
   content.append(title, description, metadata);
 
   const action = document.createElement("a");
   action.className = "test-card__action";
   action.href = `./?test=${encodeURIComponent(test.id)}`;
-  action.textContent = "View test details";
-  action.setAttribute("aria-label", `View details for ${test.title}`);
+  action.textContent = t("catalog.open");
+  action.setAttribute("aria-label", t("catalog.openLabel", { title: test.title }));
 
   article.append(content, action);
   return article;
@@ -49,12 +49,11 @@ export function renderCatalog(container, catalog) {
   intro.className = "page-intro";
 
   const title = document.createElement("h1");
-  title.textContent = "Choose a practice test";
+  title.textContent = t("catalog.title");
 
   const copy = document.createElement("p");
   copy.className = "page-intro__copy";
-  copy.textContent =
-    "Open a test, review its sections, and begin when the runner is available.";
+  copy.textContent = t("catalog.description");
 
   intro.append(title, copy);
   container.append(intro);
@@ -68,10 +67,10 @@ export function renderCatalog(container, catalog) {
     emptyState.className = "empty-state";
 
     const emptyTitle = document.createElement("h2");
-    emptyTitle.textContent = "No tests are available yet";
+    emptyTitle.textContent = t("catalog.emptyTitle");
 
     const emptyCopy = document.createElement("p");
-    emptyCopy.textContent = "Published tests will appear here.";
+    emptyCopy.textContent = t("catalog.emptyMessage");
 
     emptyState.append(emptyTitle, emptyCopy);
     container.append(emptyState);
@@ -80,7 +79,7 @@ export function renderCatalog(container, catalog) {
 
   const list = document.createElement("section");
   list.className = "catalog-list";
-  list.setAttribute("aria-label", "Available tests");
+  list.setAttribute("aria-label", t("catalog.listLabel"));
 
   publishedTests.forEach((test) => {
     list.append(createTestCard(test));

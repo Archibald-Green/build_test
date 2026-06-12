@@ -1,4 +1,5 @@
 import { AppError } from "./errors.js";
+import { t } from "./i18n.js";
 
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SUPPORTED_SCHEMA_VERSION = 1;
@@ -30,9 +31,7 @@ function isSafeRelativePath(value) {
 
 function validateId(value, path, issues) {
   if (!hasText(value) || !ID_PATTERN.test(value)) {
-    issues.push(
-      `${path} must use lowercase letters, numbers, and single hyphens.`,
-    );
+    issues.push(t("validation.idFormat", { path }));
   }
 }
 
@@ -42,35 +41,35 @@ function validateMedia(media, path, issues) {
   }
 
   if (!isRecord(media)) {
-    issues.push(`${path} must be an object when provided.`);
+    issues.push(t("validation.mediaObject", { path }));
     return;
   }
 
   if (media.image !== undefined) {
     if (!isRecord(media.image)) {
-      issues.push(`${path}.image must be an object.`);
+      issues.push(t("validation.imageObject", { path }));
     } else {
       if (!isSafeRelativePath(media.image.src)) {
-        issues.push(`${path}.image.src must be a safe relative path.`);
+        issues.push(t("validation.imagePath", { path }));
       }
       if (!hasText(media.image.alt)) {
-        issues.push(`${path}.image.alt is required for accessibility.`);
+        issues.push(t("validation.imageAlt", { path }));
       }
     }
   }
 
   if (media.audio !== undefined) {
     if (!isRecord(media.audio)) {
-      issues.push(`${path}.audio must be an object.`);
+      issues.push(t("validation.audioObject", { path }));
     } else {
       if (!isSafeRelativePath(media.audio.src)) {
-        issues.push(`${path}.audio.src must be a safe relative path.`);
+        issues.push(t("validation.audioPath", { path }));
       }
       if (
         media.audio.caption !== undefined &&
         typeof media.audio.caption !== "string"
       ) {
-        issues.push(`${path}.audio.caption must be text when provided.`);
+        issues.push(t("validation.audioCaption", { path }));
       }
     }
   }
@@ -78,23 +77,25 @@ function validateMedia(media, path, issues) {
 
 function validateQuestion(question, path, seenQuestionIds, issues) {
   if (!isRecord(question)) {
-    issues.push(`${path} must be an object.`);
+    issues.push(t("validation.object", { path }));
     return;
   }
 
   validateId(question.id, `${path}.id`, issues);
 
   if (seenQuestionIds.has(question.id)) {
-    issues.push(`${path}.id duplicates the question ID "${question.id}".`);
+    issues.push(
+      t("validation.duplicateQuestion", { path, id: question.id }),
+    );
   }
   seenQuestionIds.add(question.id);
 
   if (!SUPPORTED_QUESTION_TYPES.has(question.type)) {
-    issues.push(`${path}.type must be "single-choice" in schema version 1.`);
+    issues.push(t("validation.questionType", { path }));
   }
 
   if (!hasText(question.prompt)) {
-    issues.push(`${path}.prompt is required.`);
+    issues.push(t("validation.required", { path: `${path}.prompt` }));
   }
 
   if (
@@ -103,13 +104,13 @@ function validateQuestion(question, path, seenQuestionIds, issues) {
       !Number.isFinite(question.points) ||
       question.points <= 0)
   ) {
-    issues.push(`${path}.points must be a number greater than zero.`);
+    issues.push(t("validation.points", { path }));
   }
 
   validateMedia(question.media, `${path}.media`, issues);
 
   if (!Array.isArray(question.options) || question.options.length < 2) {
-    issues.push(`${path}.options must contain at least two options.`);
+    issues.push(t("validation.options", { path }));
     return;
   }
 
@@ -119,18 +120,25 @@ function validateQuestion(question, path, seenQuestionIds, issues) {
     const optionPath = `${path}.options[${optionIndex}]`;
 
     if (!isRecord(option)) {
-      issues.push(`${optionPath} must be an object.`);
+      issues.push(t("validation.object", { path: optionPath }));
       return;
     }
 
     validateId(option.id, `${optionPath}.id`, issues);
     if (optionIds.has(option.id)) {
-      issues.push(`${optionPath}.id duplicates the option ID "${option.id}".`);
+      issues.push(
+        t("validation.duplicateOption", {
+          path: optionPath,
+          id: option.id,
+        }),
+      );
     }
     optionIds.add(option.id);
 
     if (!hasText(option.text)) {
-      issues.push(`${optionPath}.text is required.`);
+      issues.push(
+        t("validation.required", { path: `${optionPath}.text` }),
+      );
     }
   });
 
@@ -138,25 +146,23 @@ function validateQuestion(question, path, seenQuestionIds, issues) {
     !Array.isArray(question.correctOptionIds) ||
     question.correctOptionIds.length !== 1
   ) {
-    issues.push(
-      `${path}.correctOptionIds must contain exactly one option ID for a single-choice question.`,
-    );
+    issues.push(t("validation.correctOptionCount", { path }));
   } else if (!optionIds.has(question.correctOptionIds[0])) {
-    issues.push(
-      `${path}.correctOptionIds references an option that does not exist.`,
-    );
+    issues.push(t("validation.missingCorrectOption", { path }));
   }
 
   if (!hasText(question.explanation)) {
-    issues.push(`${path}.explanation is required.`);
+    issues.push(
+      t("validation.required", { path: `${path}.explanation` }),
+    );
   }
 }
 
 function throwValidationError(resourceName, issues) {
   if (issues.length > 0) {
-    throw new AppError(`${resourceName} did not pass validation.`, {
+    throw new AppError(t("validation.failed", { resource: resourceName }), {
       code:
-        resourceName === "The test catalog"
+        resourceName === t("validation.catalogName")
           ? "CATALOG_SCHEMA_INVALID"
           : "TEST_SCHEMA_INVALID",
       details: issues,
@@ -168,20 +174,20 @@ export function validateCatalog(catalog) {
   const issues = [];
 
   if (!isRecord(catalog)) {
-    throwValidationError("The test catalog", [
-      "The catalog root must be an object.",
+    throwValidationError(t("validation.catalogName"), [
+      t("validation.catalogRootObject"),
     ]);
   }
 
   if (catalog.schemaVersion !== SUPPORTED_SCHEMA_VERSION) {
     issues.push(
-      `schemaVersion must be ${SUPPORTED_SCHEMA_VERSION}.`,
+      t("validation.schemaVersion", { version: SUPPORTED_SCHEMA_VERSION }),
     );
   }
 
   if (!Array.isArray(catalog.tests)) {
-    issues.push("tests must be an array.");
-    throwValidationError("The test catalog", issues);
+    issues.push(t("validation.testsArray"));
+    throwValidationError(t("validation.catalogName"), issues);
   }
 
   const seenIds = new Set();
@@ -190,34 +196,36 @@ export function validateCatalog(catalog) {
     const path = `tests[${index}]`;
 
     if (!isRecord(test)) {
-      issues.push(`${path} must be an object.`);
+      issues.push(t("validation.object", { path }));
       return;
     }
 
     validateId(test.id, `${path}.id`, issues);
     if (seenIds.has(test.id)) {
-      issues.push(`${path}.id duplicates the test ID "${test.id}".`);
+      issues.push(t("validation.duplicateTest", { path, id: test.id }));
     }
     seenIds.add(test.id);
 
     if (!hasText(test.title)) {
-      issues.push(`${path}.title is required.`);
+      issues.push(t("validation.required", { path: `${path}.title` }));
     }
     if (!hasText(test.description)) {
-      issues.push(`${path}.description is required.`);
+      issues.push(
+        t("validation.required", { path: `${path}.description` }),
+      );
     }
     if (!isSafeRelativePath(test.file)) {
-      issues.push(`${path}.file must be a safe path relative to index.json.`);
+      issues.push(t("validation.catalogFilePath", { path }));
     }
     if (
       test.published !== undefined &&
       typeof test.published !== "boolean"
     ) {
-      issues.push(`${path}.published must be true or false when provided.`);
+      issues.push(t("validation.publishedBoolean", { path }));
     }
   });
 
-  throwValidationError("The test catalog", issues);
+  throwValidationError(t("validation.catalogName"), issues);
   return catalog;
 }
 
@@ -225,13 +233,15 @@ export function validateTest(test) {
   const issues = [];
 
   if (!isRecord(test)) {
-    throwValidationError("The selected test", [
-      "The test root must be an object.",
+    throwValidationError(t("validation.testName"), [
+      t("validation.rootObject"),
     ]);
   }
 
   if (test.schemaVersion !== SUPPORTED_SCHEMA_VERSION) {
-    issues.push(`schemaVersion must be ${SUPPORTED_SCHEMA_VERSION}.`);
+    issues.push(
+      t("validation.schemaVersion", { version: SUPPORTED_SCHEMA_VERSION }),
+    );
   }
 
   validateId(test.id, "id", issues);
@@ -241,46 +251,46 @@ export function validateTest(test) {
     !Number.isInteger(test.version) ||
     test.version < 1
   ) {
-    issues.push("version must be a positive integer.");
+    issues.push(t("validation.version"));
   }
 
   for (const field of ["title", "description", "language", "instructions"]) {
     if (!hasText(test[field])) {
-      issues.push(`${field} is required.`);
+      issues.push(t("validation.required", { path: field }));
     }
   }
 
   if (!Array.isArray(test.headerLinks)) {
-    issues.push("headerLinks must be an array.");
+    issues.push(t("validation.headerLinksArray"));
   } else {
     test.headerLinks.forEach((link, index) => {
       const path = `headerLinks[${index}]`;
 
       if (!isRecord(link)) {
-        issues.push(`${path} must be an object.`);
+        issues.push(t("validation.object", { path }));
         return;
       }
       if (!hasText(link.label)) {
-        issues.push(`${path}.label is required.`);
+        issues.push(t("validation.required", { path: `${path}.label` }));
       }
       if (!hasText(link.url)) {
-        issues.push(`${path}.url is required.`);
+        issues.push(t("validation.required", { path: `${path}.url` }));
       } else {
         try {
           const url = new URL(link.url, "https://example.invalid/");
           if (!["http:", "https:", "mailto:"].includes(url.protocol)) {
-            issues.push(`${path}.url uses an unsupported URL protocol.`);
+            issues.push(t("validation.unsupportedProtocol", { path }));
           }
         } catch {
-          issues.push(`${path}.url is not a valid URL.`);
+          issues.push(t("validation.invalidUrl", { path }));
         }
       }
     });
   }
 
   if (!Array.isArray(test.sections) || test.sections.length === 0) {
-    issues.push("sections must contain at least one section.");
-    throwValidationError("The selected test", issues);
+    issues.push(t("validation.sections"));
+    throwValidationError(t("validation.testName"), issues);
   }
 
   const seenSectionIds = new Set();
@@ -290,28 +300,30 @@ export function validateTest(test) {
     const path = `sections[${sectionIndex}]`;
 
     if (!isRecord(section)) {
-      issues.push(`${path} must be an object.`);
+      issues.push(t("validation.object", { path }));
       return;
     }
 
     validateId(section.id, `${path}.id`, issues);
     if (seenSectionIds.has(section.id)) {
-      issues.push(`${path}.id duplicates the section ID "${section.id}".`);
+      issues.push(
+        t("validation.duplicateSection", { path, id: section.id }),
+      );
     }
     seenSectionIds.add(section.id);
 
     if (!hasText(section.title)) {
-      issues.push(`${path}.title is required.`);
+      issues.push(t("validation.required", { path: `${path}.title` }));
     }
     if (
       section.description !== undefined &&
       typeof section.description !== "string"
     ) {
-      issues.push(`${path}.description must be text when provided.`);
+      issues.push(t("validation.descriptionText", { path }));
     }
 
     if (!Array.isArray(section.questions) || section.questions.length === 0) {
-      issues.push(`${path}.questions must contain at least one question.`);
+      issues.push(t("validation.questions", { path }));
       return;
     }
 
@@ -325,6 +337,6 @@ export function validateTest(test) {
     });
   });
 
-  throwValidationError("The selected test", issues);
+  throwValidationError(t("validation.testName"), issues);
   return test;
 }

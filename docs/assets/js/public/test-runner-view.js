@@ -1,5 +1,7 @@
 import { createQuestionFlow } from "../core/question-flow.js";
 import { createAttemptStorage } from "../core/attempt-storage.js";
+import { calculateAttemptProgress } from "../core/attempt-progress.js";
+import { t, tn } from "../core/i18n.js";
 import { calculateResult } from "../core/scoring.js";
 import { renderResults } from "./results-view.js";
 
@@ -18,23 +20,34 @@ function createElement(tagName, className, text) {
   return element;
 }
 
-function getProgress(current, total) {
-  return total === 0 ? 0 : Math.round((current / total) * 100);
-}
-
-function createProgressBar(value, label, modifier = "") {
+function createProgressBar(value, label, modifier = "", progressType = "") {
   const track = createElement("div", `progress-track ${modifier}`.trim());
   track.setAttribute("role", "progressbar");
   track.setAttribute("aria-valuemin", "0");
   track.setAttribute("aria-valuemax", "100");
   track.setAttribute("aria-valuenow", String(value));
   track.setAttribute("aria-label", label);
+  if (progressType) {
+    track.dataset.progressType = progressType;
+  }
 
   const fill = createElement("span", "progress-track__fill");
   fill.style.width = `${value}%`;
   track.append(fill);
 
   return track;
+}
+
+function getNavigationLabel(flowItem, questionIndex, total, answered) {
+  return t("runner.navigationLabel", {
+    current: questionIndex + 1,
+    total,
+    section: flowItem.section.title,
+    sectionCurrent: flowItem.sectionQuestionIndex + 1,
+    answered: answered
+      ? t("runner.answeredSuffix")
+      : t("runner.unansweredSuffix"),
+  });
 }
 
 function createMediaMessage(message, retryHandler) {
@@ -49,7 +62,7 @@ function createMediaMessage(message, retryHandler) {
   notice.append(icon, copy);
 
   if (retryHandler) {
-    const retry = createElement("button", "media-notice__retry", "Retry");
+    const retry = createElement("button", "media-notice__retry", t("runner.retry"));
     retry.type = "button";
     retry.addEventListener("click", retryHandler);
     notice.append(retry);
@@ -72,7 +85,7 @@ function createImageMedia(image, testUrl) {
   const showFailure = () => {
     imageElement.hidden = true;
     notice?.remove();
-    notice = createMediaMessage("The question image could not be loaded.", () => {
+    notice = createMediaMessage(t("runner.imageLoadFailed"), () => {
       notice.remove();
       notice = null;
       imageElement.hidden = false;
@@ -90,7 +103,7 @@ function createAudioMedia(audio, testUrl) {
   const caption = createElement(
     "p",
     "question-media__caption",
-    audio.caption || "Question audio",
+    audio.caption || t("runner.questionAudio"),
   );
   const audioElement = createElement("audio", "question-media__audio");
   const audioUrl = new URL(audio.src, testUrl);
@@ -108,7 +121,7 @@ function createAudioMedia(audio, testUrl) {
 
   const showFailure = () => {
     notice?.remove();
-    notice = createMediaMessage("The question audio could not be loaded.", () => {
+    notice = createMediaMessage(t("runner.audioLoadFailed"), () => {
       notice.remove();
       notice = null;
       audioElement.load();
@@ -141,9 +154,13 @@ function createQuestionNavigator({
   onNavigate,
 }) {
   const navigator = createElement("nav", "question-navigator");
-  navigator.setAttribute("aria-label", "Question navigator");
+  navigator.setAttribute("aria-label", t("runner.navigator"));
 
-  const title = createElement("h2", "runner-sidebar__title", "Question navigator");
+  const title = createElement(
+    "h2",
+    "runner-sidebar__title",
+    t("runner.navigator"),
+  );
   navigator.append(title);
 
   let globalIndex = 0;
@@ -175,11 +192,12 @@ function createQuestionNavigator({
       button.dataset.questionId = flowItem.question.id;
       button.setAttribute(
         "aria-label",
-        `Question ${questionIndex + 1} of ${flow.length}: ${
-          section.title
-        }, section question ${flowItem.sectionQuestionIndex + 1}${
-          answers.has(flowItem.question.id) ? ", answered" : ""
-        }`,
+        getNavigationLabel(
+          flowItem,
+          questionIndex,
+          flow.length,
+          answers.has(flowItem.question.id),
+        ),
       );
 
       if (questionIndex === currentIndex) {
@@ -213,34 +231,52 @@ function createRunnerSidebar({
   onResetTest,
 }) {
   const current = flow[currentIndex];
-  const totalProgress = getProgress(currentIndex + 1, flow.length);
-  const sectionProgress = getProgress(
-    current.sectionQuestionIndex + 1,
-    current.sectionQuestionCount,
+  const progress = calculateAttemptProgress(
+    flow,
+    answers,
+    current.section.id,
   );
   const sidebar = createElement("aside", "runner-sidebar");
-  sidebar.setAttribute("aria-label", "Test progress");
+  sidebar.setAttribute("aria-label", t("runner.testProgress"));
 
-  const progressTitle = createElement("h2", "runner-sidebar__title", "Your progress");
+  const progressTitle = createElement(
+    "h2",
+    "runner-sidebar__title",
+    t("runner.yourProgress"),
+  );
   const totalText = createElement(
     "p",
     "runner-progress__label",
-    `Question ${currentIndex + 1} of ${flow.length}`,
+    t("runner.answeredProgress", {
+      answered: progress.total.answered,
+      total: progress.total.questions,
+    }),
   );
+  totalText.dataset.progressLabel = "total";
   const totalProgressRow = createElement("div", "runner-progress__row");
-  const totalBar = createProgressBar(totalProgress, "Total test progress");
+  const totalBar = createProgressBar(
+    progress.total.percentage,
+    t("runner.totalProgress", {
+      answered: progress.total.answered,
+      total: progress.total.questions,
+      percentage: progress.total.percentage,
+    }),
+    "",
+    "total",
+  );
   const totalPercent = createElement(
     "span",
     "runner-progress__percent",
-    `${totalProgress}%`,
+    `${progress.total.percentage}%`,
   );
+  totalPercent.dataset.progressPercent = "total";
   totalProgressRow.append(totalBar, totalPercent);
 
   const sectionBlock = createElement("section", "runner-section-progress");
   const sectionEyebrow = createElement(
     "p",
     "runner-sidebar__label",
-    "Current section",
+    t("runner.currentSection"),
   );
   const sectionTitle = createElement(
     "h3",
@@ -250,21 +286,30 @@ function createRunnerSidebar({
   const sectionText = createElement(
     "p",
     "runner-progress__label",
-    `Section question ${current.sectionQuestionIndex + 1} of ${
-      current.sectionQuestionCount
-    }`,
+    t("runner.sectionAnsweredProgress", {
+      answered: progress.section.answered,
+      total: progress.section.questions,
+    }),
   );
+  sectionText.dataset.progressLabel = "section";
   const sectionProgressRow = createElement("div", "runner-progress__row");
   const sectionBar = createProgressBar(
-    sectionProgress,
-    `${current.section.title} progress`,
+    progress.section.percentage,
+    t("runner.sectionProgress", {
+      section: current.section.title,
+      answered: progress.section.answered,
+      total: progress.section.questions,
+      percentage: progress.section.percentage,
+    }),
     "progress-track--section",
+    "section",
   );
   const sectionPercent = createElement(
     "span",
     "runner-progress__percent",
-    `${sectionProgress}%`,
+    `${progress.section.percentage}%`,
   );
+  sectionPercent.dataset.progressPercent = "section";
   sectionProgressRow.append(sectionBar, sectionPercent);
   sectionBlock.append(
     sectionEyebrow,
@@ -284,24 +329,24 @@ function createRunnerSidebar({
   const note = createElement(
     "p",
     "runner-sidebar__note",
-    "You can move between questions without answering.",
+    t("runner.navigationNote"),
   );
 
   const resetControls = createElement("div", "runner-reset-controls");
   const finishTest = createElement(
     "button",
     "runner-button runner-button--primary runner-finish-button",
-    "Finish test",
+    t("runner.finish"),
   );
   const resetSection = createElement(
     "button",
     "runner-reset-button",
-    "Reset current section",
+    t("runner.resetSection"),
   );
   const resetTest = createElement(
     "button",
     "runner-reset-button runner-reset-button--danger",
-    "Reset entire test",
+    t("runner.resetTest"),
   );
 
   finishTest.type = "button";
@@ -346,14 +391,18 @@ function createQuestionWorkspace({
   const counter = createElement(
     "p",
     "question-workspace__counter",
-    `Question ${currentIndex + 1} of ${flow.length}`,
+    t("runner.questionProgress", {
+      current: currentIndex + 1,
+      total: flow.length,
+    }),
   );
   const sectionCounter = createElement(
     "p",
     "question-workspace__section-counter",
-    `Section question ${current.sectionQuestionIndex + 1} of ${
-      current.sectionQuestionCount
-    }`,
+    t("runner.sectionQuestionProgress", {
+      current: current.sectionQuestionIndex + 1,
+      total: current.sectionQuestionCount,
+    }),
   );
   header.append(sectionTitle, counter, sectionCounter);
 
@@ -373,7 +422,7 @@ function createQuestionWorkspace({
   const legend = createElement(
     "legend",
     "visually-hidden",
-    "Choose one answer",
+    t("runner.chooseOne"),
   );
   options.append(legend);
 
@@ -396,8 +445,16 @@ function createQuestionWorkspace({
   questionForm.append(options);
 
   const actions = createElement("div", "runner-actions");
-  const previous = createElement("button", "runner-button runner-button--secondary", "Previous");
-  const next = createElement("button", "runner-button runner-button--primary", "Next");
+  const previous = createElement(
+    "button",
+    "runner-button runner-button--secondary",
+    t("runner.previous"),
+  );
+  const next = createElement(
+    "button",
+    "runner-button runner-button--primary",
+    t("runner.next"),
+  );
 
   previous.type = "button";
   previous.disabled = currentIndex === 0;
@@ -425,12 +482,12 @@ function createStorageWarning() {
   const title = createElement(
     "strong",
     "runner-notice__title",
-    "Progress cannot be saved",
+    t("runner.storageTitle"),
   );
   const message = createElement(
     "p",
     "runner-notice__message",
-    "Browser storage is unavailable. You can continue, but answers and your current question will be lost after refresh.",
+    t("runner.storageMessage"),
   );
 
   content.append(title, message);
@@ -449,22 +506,25 @@ function renderIncompatibleAttempt(container, test, storage, onContinue) {
   const label = createElement(
     "p",
     "attempt-version-panel__label",
-    "Saved progress needs attention",
+    t("runner.incompatibleLabel"),
   );
   const title = createElement(
     "h1",
     "attempt-version-panel__title",
-    "This test has been updated",
+    t("runner.incompatibleTitle"),
   );
   const message = createElement(
     "p",
     "attempt-version-panel__message",
-    `Saved progress for an older version of "${test.title}" cannot be used with version ${test.version}. Discard the old attempt to start this version fresh.`,
+    t("runner.incompatibleMessage", {
+      title: test.title,
+      version: test.version,
+    }),
   );
   const action = createElement(
     "button",
     "runner-button runner-button--primary",
-    "Discard old attempt and start fresh",
+    t("runner.discardOldAttempt"),
   );
 
   action.type = "button";
@@ -616,6 +676,70 @@ export function renderTestRunner(container, test, testUrl) {
     }
   }
 
+  function updateActiveProgress() {
+    const current = flow[currentIndex];
+    const progress = calculateAttemptProgress(
+      flow,
+      answers,
+      current.section.id,
+    );
+
+    const updates = [
+      {
+        type: "total",
+        value: progress.total,
+        label: t("runner.answeredProgress", {
+          answered: progress.total.answered,
+          total: progress.total.questions,
+        }),
+        ariaLabel: t("runner.totalProgress", {
+          answered: progress.total.answered,
+          total: progress.total.questions,
+          percentage: progress.total.percentage,
+        }),
+      },
+      {
+        type: "section",
+        value: progress.section,
+        label: t("runner.sectionAnsweredProgress", {
+          answered: progress.section.answered,
+          total: progress.section.questions,
+        }),
+        ariaLabel: t("runner.sectionProgress", {
+          section: current.section.title,
+          answered: progress.section.answered,
+          total: progress.section.questions,
+          percentage: progress.section.percentage,
+        }),
+      },
+    ];
+
+    updates.forEach(({ type, value, label, ariaLabel }) => {
+      const text = container.querySelector(
+        `[data-progress-label="${type}"]`,
+      );
+      const track = container.querySelector(
+        `[data-progress-type="${type}"]`,
+      );
+      const percent = container.querySelector(
+        `[data-progress-percent="${type}"]`,
+      );
+
+      if (text) {
+        text.textContent = label;
+      }
+      if (track) {
+        track.setAttribute("aria-valuenow", String(value.percentage));
+        track.setAttribute("aria-label", ariaLabel);
+        track.querySelector(".progress-track__fill").style.width =
+          `${value.percentage}%`;
+      }
+      if (percent) {
+        percent.textContent = `${value.percentage}%`;
+      }
+    });
+  }
+
   function beginFreshAttempt({ persist = true } = {}) {
     answers.clear();
     currentIndex = 0;
@@ -658,7 +782,7 @@ export function renderTestRunner(container, test, testUrl) {
 
   function resetEntireTest() {
     const confirmed = window.confirm(
-      "Reset the entire test? All saved answers, progress, and submitted results for this test will be removed.",
+      t("runner.resetTestConfirm"),
     );
 
     if (!confirmed) {
@@ -680,7 +804,7 @@ export function renderTestRunner(container, test, testUrl) {
   }
 
   function render({ focusPrompt = false } = {}) {
-    const backLink = createElement("a", "back-link", "Back to all tests");
+    const backLink = createElement("a", "back-link", t("runner.backToTests"));
     backLink.href = "./";
 
     const runnerHeading = createElement("header", "runner-heading");
@@ -730,25 +854,32 @@ export function renderTestRunner(container, test, testUrl) {
     const answer = (questionId, optionId) => {
       answers.set(questionId, optionId);
       persistAttempt();
+      updateActiveProgress();
       const navigationButton = container.querySelector(
         `.question-nav-button[data-question-id="${CSS.escape(questionId)}"]`,
       );
 
       if (navigationButton) {
         navigationButton.classList.add("is-answered");
-        if (!navigationButton.getAttribute("aria-label").endsWith(", answered")) {
-          navigationButton.setAttribute(
-            "aria-label",
-            `${navigationButton.getAttribute("aria-label")}, answered`,
-          );
-        }
+        const questionIndex = flow.findIndex(
+          ({ question }) => question.id === questionId,
+        );
+        navigationButton.setAttribute(
+          "aria-label",
+          getNavigationLabel(
+            flow[questionIndex],
+            questionIndex,
+            flow.length,
+            true,
+          ),
+        );
       }
     };
 
     const resetSection = () => {
       const currentSection = flow[currentIndex].section;
       const confirmed = window.confirm(
-        `Reset "${currentSection.title}"? Answers in this section will be cleared. Answers in other sections will be kept.`,
+        t("runner.resetSectionConfirm", { section: currentSection.title }),
       );
 
       if (!confirmed) {
@@ -772,9 +903,7 @@ export function renderTestRunner(container, test, testUrl) {
 
       if (unansweredCount > 0) {
         const confirmed = window.confirm(
-          `${unansweredCount} ${
-            unansweredCount === 1 ? "question is" : "questions are"
-          } unanswered. Submit the test anyway?`,
+          tn("runner.unansweredSubmit", unansweredCount),
         );
 
         if (!confirmed) {

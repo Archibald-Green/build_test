@@ -3,10 +3,10 @@
   "tests": [
     {
       "id": "sample-test",
-      "title": "Sample Admission Test",
-      "description": "Mathematics, analytical thinking, and English practice.",
+      "title": "Пробный вступительный тест",
+      "description": "Математика, логическое мышление и русский язык.",
       "file": "sample-test/test.json",
-      "language": "en",
+      "language": "ru",
       "sectionCount": 3,
       "questionCount": 6,
       "published": true

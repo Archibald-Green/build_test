@@ -1,14 +1,16 @@
+import { formatDateTime, t } from "../core/i18n.js";
+
 const STATUS_META = {
   correct: {
-    label: "Correct",
+    labelKey: "results.status.correct",
     icon: "\u2713",
   },
   incorrect: {
-    label: "Incorrect",
+    labelKey: "results.status.incorrect",
     icon: "\u00d7",
   },
   unanswered: {
-    label: "Unanswered",
+    labelKey: "results.status.unanswered",
     icon: "\u2212",
   },
 };
@@ -65,7 +67,11 @@ function createCountCard(status, value) {
   const icon = createElement("span", "result-count__icon", meta.icon);
   icon.setAttribute("aria-hidden", "true");
   const count = createElement("strong", "result-count__value", String(value));
-  const label = createElement("span", "result-count__label", meta.label);
+  const label = createElement(
+    "span",
+    "result-count__label",
+    t(meta.labelKey),
+  );
 
   card.append(icon, count, label);
   return card;
@@ -92,7 +98,10 @@ function createSectionScore(section) {
       : Math.round((section.earnedPoints / section.totalPoints) * 100);
   const progress = createElement("div", "section-score__track");
   progress.setAttribute("role", "progressbar");
-  progress.setAttribute("aria-label", `${section.sectionTitle} score`);
+  progress.setAttribute(
+    "aria-label",
+    t("results.sectionScore", { section: section.sectionTitle }),
+  );
   progress.setAttribute("aria-valuemin", "0");
   progress.setAttribute("aria-valuemax", "100");
   progress.setAttribute("aria-valuenow", String(percentage));
@@ -123,18 +132,18 @@ function createReviewCard(questionResult, lookup, index) {
   );
   const icon = createElement("span", "review-status__icon", meta.icon);
   icon.setAttribute("aria-hidden", "true");
-  const statusText = createElement("span", "", meta.label);
+  const statusText = createElement("span", "", t(meta.labelKey));
   status.append(icon, statusText);
 
   const sectionTitle = createElement(
     "p",
     "review-card__section",
-    section?.title ?? "Section unavailable",
+    section?.title ?? t("results.sectionUnavailable"),
   );
   const prompt = createElement(
     "h3",
     "review-card__prompt",
-    `${index + 1}. ${question?.prompt ?? "Question unavailable"}`,
+    `${index + 1}. ${question?.prompt ?? t("results.questionUnavailable")}`,
   );
   header.append(status, sectionTitle, prompt);
 
@@ -142,33 +151,33 @@ function createReviewCard(questionResult, lookup, index) {
 
   const rows = [
     [
-      "Your answer",
+      t("results.yourAnswer"),
       question
         ? getOptionText(
             question,
             questionResult.selectedOptionId,
             questionResult.status === "unanswered"
-              ? "No answer selected"
-              : "Answer unavailable",
+              ? t("results.noAnswer")
+              : t("results.answerUnavailable"),
           )
-        : "Answer unavailable",
+        : t("results.answerUnavailable"),
     ],
     [
-      "Correct answer",
+      t("results.correctAnswer"),
       question
         ? getOptionText(
             question,
             questionResult.correctOptionId,
-            "Answer unavailable",
+            t("results.answerUnavailable"),
           )
-        : "Answer unavailable",
+        : t("results.answerUnavailable"),
     ],
     [
-      "Explanation",
-      question?.explanation || "No explanation provided.",
+      t("results.explanation"),
+      question?.explanation || t("results.noExplanation"),
     ],
     [
-      "Points",
+      t("results.points"),
       `${formatPoints(questionResult.earnedPoints)} / ${formatPoints(
         questionResult.totalPoints,
       )}`,
@@ -202,7 +211,7 @@ export function renderResults(
   container.classList.add("app--runner");
   container.setAttribute("aria-busy", "false");
 
-  const backLink = createElement("a", "back-link", "Back to all tests");
+  const backLink = createElement("a", "back-link", t("runner.backToTests"));
   backLink.href = "./";
 
   const hero = createElement("section", "results-hero");
@@ -212,11 +221,15 @@ export function renderResults(
     "results-hero__test-title",
     test.title,
   );
-  const title = createElement("h1", "results-hero__title", "Test complete");
+  const title = createElement(
+    "h1",
+    "results-hero__title",
+    t("results.complete"),
+  );
   const submitted = createElement(
     "p",
     "results-hero__submitted",
-    `Submitted ${new Date(submittedAt).toLocaleString()}`,
+    t("results.submitted", { date: formatDateTime(submittedAt) }),
   );
   intro.append(testTitle, title, submitted);
 
@@ -224,9 +237,10 @@ export function renderResults(
   const score = createElement(
     "strong",
     "results-total__score",
-    `${formatPoints(result.earnedPoints)} / ${formatPoints(
-      result.totalPoints,
-    )} points`,
+    t("results.pointsScore", {
+      earned: formatPoints(result.earnedPoints),
+      total: formatPoints(result.totalPoints),
+    }),
   );
   const percentage = createElement(
     "span",
@@ -236,14 +250,14 @@ export function renderResults(
   const scoreLabel = createElement(
     "span",
     "results-total__label",
-    "Total score",
+    t("results.totalScore"),
   );
   total.append(score, percentage, scoreLabel);
   hero.append(intro, total);
 
   const dashboard = createElement("div", "results-dashboard");
   const countGrid = createElement("section", "result-counts");
-  countGrid.setAttribute("aria-label", "Answer counts");
+  countGrid.setAttribute("aria-label", t("results.answerCounts"));
   countGrid.append(
     createCountCard("correct", result.counts.correct),
     createCountCard("incorrect", result.counts.incorrect),
@@ -251,7 +265,11 @@ export function renderResults(
   );
 
   const sectionPanel = createElement("section", "section-scores");
-  const sectionHeading = createElement("h2", "", "Score by section");
+  const sectionHeading = createElement(
+    "h2",
+    "",
+    t("results.scoreBySection"),
+  );
   const sectionList = createElement("ul", "section-scores__list");
   result.sections.forEach((section) =>
     sectionList.append(createSectionScore(section)),
@@ -263,12 +281,12 @@ export function renderResults(
   const reviewButton = createElement(
     "button",
     "runner-button runner-button--primary",
-    "Review answers",
+    t("results.reviewAnswers"),
   );
   const resetButton = createElement(
     "button",
     "runner-button runner-button--secondary",
-    "Reset entire test",
+    t("results.resetTest"),
   );
   reviewButton.type = "button";
   reviewButton.setAttribute("aria-controls", "answer-review");
@@ -280,11 +298,11 @@ export function renderResults(
   review.id = "answer-review";
   review.hidden = true;
   const reviewHeader = createElement("div", "answer-review__header");
-  const reviewHeading = createElement("h2", "", "Answer review");
+  const reviewHeading = createElement("h2", "", t("results.reviewTitle"));
   const reviewCopy = createElement(
     "p",
     "",
-    "Compare your answers with the correct answers and explanations.",
+    t("results.reviewDescription"),
   );
   reviewHeader.append(reviewHeading, reviewCopy);
   const reviewList = createElement("div", "answer-review__list");
@@ -296,7 +314,7 @@ export function renderResults(
   reviewButton.addEventListener("click", () => {
     review.hidden = false;
     reviewButton.setAttribute("aria-expanded", "true");
-    reviewButton.textContent = "Answer review shown";
+    reviewButton.textContent = t("results.reviewShown");
     reviewButton.disabled = true;
     reviewHeading.tabIndex = -1;
     reviewHeading.focus({ preventScroll: true });
@@ -307,8 +325,8 @@ export function renderResults(
 
   const savedNotice = createElement("p", "results-saved-notice");
   savedNotice.textContent = storageAvailable
-    ? "Your submitted result is saved in this browser. Reset the entire test to start a new attempt."
-    : "Browser storage is unavailable. This result will be lost after refresh.";
+    ? t("results.saved")
+    : t("results.notSaved");
 
   container.append(
     backLink,

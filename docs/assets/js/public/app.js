@@ -1,5 +1,11 @@
 import { toAppError, AppError } from "../core/errors.js";
 import { fetchJson } from "../core/fetch-json.js";
+import {
+  DEFAULT_LOCALE,
+  setLocale,
+  t,
+  translateDocument,
+} from "../core/i18n.js";
 import { validateCatalog, validateTest } from "../core/test-validator.js";
 import { renderCatalog } from "./catalog-view.js";
 import { renderTestRunner } from "./test-runner-view.js";
@@ -7,56 +13,23 @@ import { renderTestRunner } from "./test-runner-view.js";
 const app = document.querySelector("#app");
 const catalogUrl = new URL("../../../content/tests/index.json", import.meta.url);
 
-const ERROR_PRESENTATION = {
-  CATALOG_NOT_FOUND: {
-    label: "Catalog missing",
-    title: "The test catalog could not be found",
-    action: "Try loading the catalog again",
-  },
-  CATALOG_INVALID_JSON: {
-    label: "Catalog error",
-    title: "The test catalog contains invalid JSON",
-    action: "Try loading the catalog again",
-  },
-  MISSING_TEST_ID: {
-    label: "Test ID missing",
-    title: "No test ID was provided",
-    action: "Choose a test from the catalog",
-  },
-  TEST_NOT_FOUND: {
-    label: "Not found",
-    title: "That test is not available",
-    action: "Return to test catalog",
-  },
-  TEST_FILE_NOT_FOUND: {
-    label: "Test file missing",
-    title: "The selected test file could not be found",
-    action: "Return to test catalog",
-  },
-  TEST_INVALID_JSON: {
-    label: "Test file error",
-    title: "The selected test contains invalid JSON",
-    action: "Return to test catalog",
-  },
-  CATALOG_SCHEMA_INVALID: {
-    label: "Catalog validation error",
-    title: "The test catalog has an invalid structure",
-    action: "Try loading the catalog again",
-  },
-  TEST_SCHEMA_INVALID: {
-    label: "Test validation error",
-    title: "The selected test has an invalid structure",
-    action: "Return to test catalog",
-  },
-};
+setLocale(DEFAULT_LOCALE);
+translateDocument();
 
 function renderError(error) {
   const appError = toAppError(error);
-  const presentation = ERROR_PRESENTATION[appError.code] ?? {
-    label: "Unable to load",
-    title: "This page could not be prepared",
-    action: "Return to test catalog",
-  };
+  const errorKey = [
+    "CATALOG_NOT_FOUND",
+    "CATALOG_INVALID_JSON",
+    "MISSING_TEST_ID",
+    "TEST_NOT_FOUND",
+    "TEST_FILE_NOT_FOUND",
+    "TEST_INVALID_JSON",
+    "CATALOG_SCHEMA_INVALID",
+    "TEST_SCHEMA_INVALID",
+  ].includes(appError.code)
+    ? appError.code
+    : "fallback";
 
   app.replaceChildren();
   app.classList.remove("app--runner");
@@ -77,12 +50,12 @@ function renderError(error) {
 
   const label = document.createElement("p");
   label.className = "error-panel__label";
-  label.textContent = presentation.label;
+  label.textContent = t(`errors.${errorKey}.label`);
 
   const title = document.createElement("h1");
   title.id = "error-title";
   title.tabIndex = -1;
-  title.textContent = presentation.title;
+  title.textContent = t(`errors.${errorKey}.title`);
 
   const message = document.createElement("p");
   message.id = "error-message";
@@ -96,14 +69,14 @@ function renderError(error) {
     appError.code === "CATALOG_INVALID_JSON"
       ? window.location.href
       : "./";
-  action.textContent = presentation.action;
+  action.textContent = t(`errors.${errorKey}.action`);
 
   content.append(label, title, message);
 
   if (appError.details.length > 0) {
     const details = document.createElement("details");
     const summary = document.createElement("summary");
-    summary.textContent = "Technical details";
+    summary.textContent = t("errors.technicalDetails");
 
     const list = document.createElement("ul");
     appError.details.forEach((detail) => {
@@ -135,7 +108,7 @@ function getRequestedTestId() {
 
   if (!testId) {
     throw new AppError(
-      "Add a test ID after ?test= or choose a published test from the catalog.",
+      t("errors.missingTestId"),
       { code: "MISSING_TEST_ID" },
     );
   }
@@ -150,7 +123,7 @@ async function loadSelectedTest(catalog, testId) {
 
   if (!catalogEntry) {
     throw new AppError(
-      `No published test with the ID "${testId}" exists in this catalog.`,
+      t("errors.testNotFound", { testId }),
       { code: "TEST_NOT_FOUND" },
     );
   }
@@ -158,18 +131,18 @@ async function loadSelectedTest(catalog, testId) {
   const testUrl = new URL(catalogEntry.file, catalogUrl);
   const test = validateTest(
     await fetchJson(testUrl, {
-      resourceName: `Test "${catalogEntry.title}"`,
+      resourceName: t("resources.test", { title: catalogEntry.title }),
       notFoundCode: "TEST_FILE_NOT_FOUND",
       invalidJsonCode: "TEST_INVALID_JSON",
     }),
   );
 
   if (test.id !== catalogEntry.id) {
-    throw new AppError("The selected test does not match its catalog entry.", {
+    throw new AppError(t("errors.testMismatch"), {
       code: "TEST_SCHEMA_INVALID",
       details: [
-        `Catalog ID: ${catalogEntry.id}`,
-        `Test file ID: ${test.id}`,
+        t("errors.catalogId", { id: catalogEntry.id }),
+        t("errors.testFileId", { id: test.id }),
       ],
     });
   }
@@ -182,7 +155,7 @@ async function initialize() {
   try {
     const catalog = validateCatalog(
       await fetchJson(catalogUrl, {
-        resourceName: "The test catalog",
+        resourceName: t("resources.catalog"),
         notFoundCode: "CATALOG_NOT_FOUND",
         invalidJsonCode: "CATALOG_INVALID_JSON",
       }),
@@ -194,7 +167,7 @@ async function initialize() {
       return;
     }
 
-    document.title = "Available Tests | OpenTest";
+    document.title = t("meta.catalogTitle");
     renderCatalog(app, catalog);
   } catch (error) {
     renderError(error);

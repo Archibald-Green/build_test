@@ -1,3 +1,5 @@
+import { t } from "./i18n.js";
+
 export class AppError extends Error {
   constructor(message, options = {}) {
     super(message, options);
@@ -13,7 +15,7 @@ export function toAppError(error) {
   }
 
   return new AppError(
-    "Something unexpected happened while preparing this page. Please try again.",
+    t("errors.unexpected"),
     {
       code: "UNEXPECTED_ERROR",
       cause: error,

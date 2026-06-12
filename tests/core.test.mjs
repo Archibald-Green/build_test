@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { getLocale, setLocale, t, tn } from "../docs/assets/js/core/i18n.js";
+import { calculateAttemptProgress } from "../docs/assets/js/core/attempt-progress.js";
 import { createQuestionFlow } from "../docs/assets/js/core/question-flow.js";
 import { calculateResult } from "../docs/assets/js/core/scoring.js";
 import {
@@ -96,10 +98,19 @@ test("rejects unsafe media paths", () => {
     },
   };
 
-  assert.throws(
-    () => validateTest(fixture),
-    /did not pass validation/,
-  );
+  assert.throws(() => validateTest(fixture), {
+    code: "TEST_SCHEMA_INVALID",
+  });
+});
+
+test("uses Russian interface translations and plural forms by default", () => {
+  setLocale("ru");
+
+  assert.equal(getLocale(), "ru");
+  assert.equal(t("runner.next"), "Далее");
+  assert.equal(tn("catalog.question", 1), "1 вопрос");
+  assert.equal(tn("catalog.question", 2), "2 вопроса");
+  assert.equal(tn("catalog.question", 5), "5 вопросов");
 });
 
 test("creates a dynamic ordered flow for every section and question", () => {
@@ -115,6 +126,28 @@ test("creates a dynamic ordered flow for every section and question", () => {
   );
   assert.equal(flow[2].sectionQuestionIndex, 1);
   assert.equal(flow[2].sectionQuestionCount, 2);
+});
+
+test("calculates completion progress from answers instead of navigation", () => {
+  const flow = createQuestionFlow(createTest());
+  const answers = new Map([
+    ["first-1", "a"],
+    ["second-2", "a"],
+  ]);
+  const progress = calculateAttemptProgress(flow, answers, "second");
+
+  assert.deepEqual(progress, {
+    total: {
+      answered: 2,
+      questions: 3,
+      percentage: 67,
+    },
+    section: {
+      answered: 1,
+      questions: 2,
+      percentage: 50,
+    },
+  });
 });
 
 test("scores correct, incorrect, and unanswered answers by section", () => {

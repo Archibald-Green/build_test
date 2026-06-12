@@ -1,31 +1,31 @@
 {
   "schemaVersion": 1,
   "id": "sample-test",
-  "version": 1,
-  "title": "Sample Admission Test",
-  "description": "Mathematics, analytical thinking, and English practice.",
-  "language": "en",
-  "instructions": "Choose one answer for each question. Images and audio may appear in some questions.",
+  "version": 2,
+  "title": "Пробный вступительный тест",
+  "description": "Математика, логическое мышление и русский язык.",
+  "language": "ru",
+  "instructions": "Выберите один ответ в каждом вопросе. В некоторых заданиях могут использоваться изображения и аудио.",
   "headerLinks": [
     {
-      "label": "Preparation guide",
+      "label": "Рекомендации по подготовке",
       "url": "https://example.com/preparation"
     },
     {
-      "label": "Contact",
+      "label": "Связаться с нами",
       "url": "mailto:tests@example.com"
     }
   ],
   "sections": [
     {
       "id": "mathematics",
-      "title": "Mathematics",
-      "description": "Core numerical reasoning.",
+      "title": "Математика",
+      "description": "Базовые задачи на вычисления и функции.",
       "questions": [
         {
           "id": "math-001",
           "type": "single-choice",
-          "prompt": "If 2y + 3 is at most 11, what is the greatest possible value of y?",
+          "prompt": "Если 2y + 3 ≤ 11, чему равно наибольшее возможное значение y?",
           "points": 1,
           "options": [
             { "id": "a", "text": "2" },
@@ -34,53 +34,53 @@
             { "id": "d", "text": "8" }
           ],
           "correctOptionIds": ["b"],
-          "explanation": "Subtract 3 from both sides and divide by 2: y is at most 4."
+          "explanation": "Вычтем 3 из обеих частей неравенства и разделим на 2: y ≤ 4."
         },
         {
           "id": "math-002",
           "type": "single-choice",
-          "prompt": "Which graph represents a linear function?",
+          "prompt": "На каком графике изображена линейная функция?",
           "points": 1,
           "media": {
             "image": {
               "src": "media/linear-functions.svg",
-              "alt": "Four small coordinate graphs labeled A through D"
+              "alt": "Четыре небольших графика на координатной плоскости, обозначенные буквами A, B, C и D"
             }
           },
           "options": [
-            { "id": "a", "text": "Graph A" },
-            { "id": "b", "text": "Graph B" },
-            { "id": "c", "text": "Graph C" },
-            { "id": "d", "text": "Graph D" }
+            { "id": "a", "text": "График A" },
+            { "id": "b", "text": "График B" },
+            { "id": "c", "text": "График C" },
+            { "id": "d", "text": "График D" }
           ],
           "correctOptionIds": ["c"],
-          "explanation": "Graph C is a straight, non-vertical line and represents a linear function."
+          "explanation": "График C является прямой невертикальной линией и задаёт линейную функцию."
         }
       ]
     },
     {
       "id": "analytical-thinking",
-      "title": "Analytical Thinking",
-      "description": "Patterns, sequences, and logical conclusions.",
+      "title": "Логическое мышление",
+      "description": "Последовательности и логические выводы.",
       "questions": [
         {
           "id": "logic-001",
           "type": "single-choice",
-          "prompt": "All poets are writers. Some writers are teachers. Which conclusion must be true?",
+          "prompt": "Все поэты являются писателями. Некоторые писатели работают учителями. Какое утверждение обязательно верно?",
           "points": 1,
           "options": [
-            { "id": "a", "text": "All teachers are poets" },
-            { "id": "b", "text": "Some poets are teachers" },
-            { "id": "c", "text": "All poets are writers" },
-            { "id": "d", "text": "No writers are teachers" }
+            { "id": "a", "text": "Все учителя являются поэтами" },
+            { "id": "b", "text": "Некоторые поэты работают учителями" },
+            { "id": "c", "text": "Все поэты являются писателями" },
+            { "id": "d", "text": "Ни один писатель не работает учителем" }
           ],
           "correctOptionIds": ["c"],
-          "explanation": "The first statement directly establishes that all poets are writers."
+          "explanation": "Первое условие прямо утверждает, что все поэты являются писателями."
         },
         {
           "id": "logic-002",
           "type": "single-choice",
-          "prompt": "What comes next in the sequence: 3, 6, 12, 24, ...?",
+          "prompt": "Какое число должно быть следующим в последовательности: 3, 6, 12, 24, ...?",
           "points": 1,
           "options": [
             { "id": "a", "text": "30" },
@@ -89,48 +89,48 @@
             { "id": "d", "text": "48" }
           ],
           "correctOptionIds": ["d"],
-          "explanation": "Each number is twice the preceding number, so 24 multiplied by 2 is 48."
+          "explanation": "Каждое число в два раза больше предыдущего, поэтому 24 × 2 = 48."
         }
       ]
     },
     {
-      "id": "english",
-      "title": "English",
-      "description": "Vocabulary and listening comprehension.",
+      "id": "russian-language",
+      "title": "Русский язык",
+      "description": "Лексика и понимание устной речи.",
       "questions": [
         {
-          "id": "english-001",
+          "id": "russian-001",
           "type": "single-choice",
-          "prompt": "Choose the word closest in meaning to \"brief\".",
+          "prompt": "Выберите слово, наиболее близкое по значению к слову «краткий».",
           "points": 1,
           "options": [
-            { "id": "a", "text": "Short" },
-            { "id": "b", "text": "Difficult" },
-            { "id": "c", "text": "Ancient" },
-            { "id": "d", "text": "Careful" }
+            { "id": "a", "text": "Короткий" },
+            { "id": "b", "text": "Сложный" },
+            { "id": "c", "text": "Древний" },
+            { "id": "d", "text": "Осторожный" }
           ],
           "correctOptionIds": ["a"],
-          "explanation": "\"Brief\" means short in duration or length."
+          "explanation": "Слово «краткий» означает небольшой по продолжительности или объёму."
         },
         {
-          "id": "english-002",
+          "id": "russian-002",
           "type": "single-choice",
-          "prompt": "Listen to the recording. Where will the speaker meet the group?",
+          "prompt": "Прослушайте запись. Где выступающий встретится с группой?",
           "points": 1,
           "media": {
             "audio": {
               "src": "media/meeting-place.mp3",
-              "caption": "Short listening prompt"
+              "caption": "Короткое задание на понимание устной речи"
             }
           },
           "options": [
-            { "id": "a", "text": "At the library" },
-            { "id": "b", "text": "At the station" },
-            { "id": "c", "text": "At the museum" },
-            { "id": "d", "text": "At the cafe" }
+            { "id": "a", "text": "У библиотеки" },
+            { "id": "b", "text": "У вокзала" },
+            { "id": "c", "text": "У музея" },
+            { "id": "d", "text": "У кафе" }
           ],
           "correctOptionIds": ["b"],
-          "explanation": "The speaker says the group should meet beside the main station entrance."
+          "explanation": "В записи говорится, что группа должна встретиться у главного входа на вокзал."
         }
       ]
     }

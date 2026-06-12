@@ -5,6 +5,8 @@ practice tests. The public application is plain HTML, CSS, JavaScript modules,
 JSON, images, and audio, so the complete site can be hosted from `/docs` with
 GitHub Pages.
 
+The public interface language is Russian by default.
+
 ## Project structure
 
 ```text
@@ -25,6 +27,26 @@ tests/
 package.json
 README.md
 ```
+
+## Interface localization
+
+Public interface translations are stored in:
+
+```text
+docs/assets/js/core/i18n.js
+```
+
+The default locale is `ru`. Rendering modules request labels, messages,
+confirmations, ARIA text, errors, and plural forms through the localization
+module instead of embedding interface copy directly.
+
+Test content is separate from interface localization. Each `test.json` controls
+its own title, description, instructions, section names, questions, options,
+explanations, media descriptions, header links, and `language` value. The app
+does not translate test content automatically.
+
+English (`en`) or Kazakh (`kk`) interface dictionaries and a language switcher
+can be added later without changing the test runner or scoring logic.
 
 ## Run locally
 
@@ -136,6 +158,7 @@ snapshot and remain immutable.
 
 ## Current MVP
 
+- Russian interface with a reusable localization dictionary
 - Static catalog and `?test=<test-id>` loading
 - Dynamic sections and questions
 - One-question-at-a-time runner
@@ -170,9 +193,9 @@ raw HTML.
 - [ ] Deploy from `/docs` and verify catalog, test, and media URLs under the
       GitHub Pages project path.
 
-## Future Stage 6
+## Future builder stage
 
-The local builder remains intentionally unimplemented. Stage 6 can reuse the
+The local builder remains intentionally unimplemented. The builder can reuse the
 existing schema validation, dynamic flow, scoring, and safe media conventions
 to provide local draft storage, preview, and JSON export without adding a
 backend.
