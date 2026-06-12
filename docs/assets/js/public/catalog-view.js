@@ -1,4 +1,4 @@
-import { t, tn } from "../core/i18n.js";
+import { t, tn } from "../core/i18n.js?v=20260612-multiple-choice";
 
 function createTestCard(test) {
   const article = document.createElement("article");

@@ -1,9 +1,11 @@
-function hasAnswer(answers, questionId) {
-  if (answers instanceof Map || answers instanceof Set) {
-    return answers.has(questionId);
+import { isAnsweredValue } from "./answers.js";
+
+function getAnswer(answers, questionId) {
+  if (answers instanceof Map) {
+    return answers.get(questionId);
   }
 
-  return Object.hasOwn(answers ?? {}, questionId);
+  return answers?.[questionId];
 }
 
 function getPercentage(answered, total) {
@@ -15,10 +17,10 @@ export function calculateAttemptProgress(flow, answers, currentSectionId) {
     ({ section }) => section.id === currentSectionId,
   );
   const answeredTotal = flow.filter(({ question }) =>
-    hasAnswer(answers, question.id),
+    isAnsweredValue(getAnswer(answers, question.id)),
   ).length;
   const answeredInSection = sectionItems.filter(({ question }) =>
-    hasAnswer(answers, question.id),
+    isAnsweredValue(getAnswer(answers, question.id)),
   ).length;
 
   return {

@@ -1,15 +1,19 @@
 import { AppError } from "./errors.js";
-import { t } from "./i18n.js";
+import { t } from "./i18n.js?v=20260612-multiple-choice";
 
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SUPPORTED_SCHEMA_VERSION = 1;
-const SUPPORTED_QUESTION_TYPES = new Set(["single-choice"]);
+const SUPPORTED_QUESTION_TYPES = new Set([
+  "single-choice",
+  "multiple-choice",
+]);
 const SUPPORTED_SOCIAL_STYLES = new Set([
   "telegram",
   "whatsapp",
   "primary",
   "secondary",
 ]);
+const SUPPORTED_WATERMARK_SIZES = new Set(["small", "medium", "large"]);
 
 function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -98,6 +102,42 @@ function validateSocialBlock(socialBlock, issues) {
       issues.push(t("validation.socialStyle", { path }));
     }
   });
+}
+
+function validateWatermark(watermark, issues) {
+  if (watermark === undefined) {
+    return;
+  }
+
+  if (!isRecord(watermark)) {
+    issues.push(t("validation.watermarkObject"));
+    return;
+  }
+
+  if (typeof watermark.enabled !== "boolean") {
+    issues.push(t("validation.watermarkEnabled"));
+  }
+  if (
+    watermark.text !== undefined &&
+    typeof watermark.text !== "string"
+  ) {
+    issues.push(t("validation.watermarkText"));
+  }
+  if (
+    watermark.opacity !== undefined &&
+    (typeof watermark.opacity !== "number" ||
+      !Number.isFinite(watermark.opacity) ||
+      watermark.opacity < 0 ||
+      watermark.opacity > 1)
+  ) {
+    issues.push(t("validation.watermarkOpacity"));
+  }
+  if (
+    watermark.size !== undefined &&
+    !SUPPORTED_WATERMARK_SIZES.has(watermark.size)
+  ) {
+    issues.push(t("validation.watermarkSize"));
+  }
 }
 
 function validateId(value, path, issues) {
@@ -213,13 +253,32 @@ function validateQuestion(question, path, seenQuestionIds, issues) {
     }
   });
 
-  if (
-    !Array.isArray(question.correctOptionIds) ||
-    question.correctOptionIds.length !== 1
-  ) {
-    issues.push(t("validation.correctOptionCount", { path }));
-  } else if (!optionIds.has(question.correctOptionIds[0])) {
-    issues.push(t("validation.missingCorrectOption", { path }));
+  if (!Array.isArray(question.correctOptionIds)) {
+    issues.push(t("validation.correctOptionsArray", { path }));
+  } else {
+    if (
+      question.type === "single-choice" &&
+      question.correctOptionIds.length !== 1
+    ) {
+      issues.push(t("validation.correctOptionCountSingle", { path }));
+    }
+    if (
+      question.type === "multiple-choice" &&
+      question.correctOptionIds.length < 1
+    ) {
+      issues.push(t("validation.correctOptionCountMultiple", { path }));
+    }
+    if (
+      new Set(question.correctOptionIds).size !==
+      question.correctOptionIds.length
+    ) {
+      issues.push(t("validation.duplicateCorrectOption", { path }));
+    }
+    if (
+      question.correctOptionIds.some((optionId) => !optionIds.has(optionId))
+    ) {
+      issues.push(t("validation.missingCorrectOption", { path }));
+    }
   }
 
   if (!hasText(question.explanation)) {
@@ -360,6 +419,7 @@ export function validateTest(test) {
   }
 
   validateSocialBlock(test.socialBlock, issues);
+  validateWatermark(test.watermark, issues);
 
   if (!Array.isArray(test.sections) || test.sections.length === 0) {
     issues.push(t("validation.sections"));

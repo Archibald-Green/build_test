@@ -130,6 +130,7 @@ export const en = {
     resetSection: "Reset current section",
     resetTest: "Retake test",
     chooseOne: "Choose one answer",
+    chooseMany: "Choose one or more answers",
     previous: "Previous",
     next: "Next",
     storageTitle: "Progress could not be saved",
@@ -160,7 +161,10 @@ export const en = {
     sectionUnavailable: "Section unavailable",
     questionUnavailable: "Question unavailable",
     yourAnswer: "Your answer",
+    yourAnswers: "Your answers",
     correctAnswer: "Correct answer",
+    correctAnswers: "Correct answers",
+    multipleChoiceNote: "This question may have several correct answers.",
     explanation: "Explanation",
     points: "Points",
     noAnswer: "No answer selected",
@@ -202,13 +206,19 @@ export const en = {
     audioCaption: "{path}.audio.caption must be a string when provided.",
     object: "{path} must be an object.",
     duplicateQuestion: "{path}.id duplicates question ID “{id}”.",
-    questionType: "{path}.type must be “single-choice” in schema version 1.",
+    questionType:
+      "{path}.type must be “single-choice” or “multiple-choice”.",
     required: "Field {path} is required.",
     points: "{path}.points must be a number greater than zero.",
     options: "{path}.options must contain at least two options.",
     duplicateOption: "{path}.id duplicates option ID “{id}”.",
-    correctOptionCount:
+    correctOptionsArray: "{path}.correctOptionIds must be an array.",
+    correctOptionCountSingle:
       "{path}.correctOptionIds must contain exactly one option ID.",
+    correctOptionCountMultiple:
+      "{path}.correctOptionIds must contain at least one option ID.",
+    duplicateCorrectOption:
+      "{path}.correctOptionIds must not contain duplicate IDs.",
     missingCorrectOption:
       "{path}.correctOptionIds references an option that does not exist.",
     testsArray: "Field tests must be an array.",
@@ -231,5 +241,10 @@ export const en = {
     socialStyle:
       "{path}.style must be telegram, whatsapp, primary, or secondary.",
     socialUrl: "{path}.url must be a valid external HTTP(S) URL.",
+    watermarkObject: "watermark must be an object when provided.",
+    watermarkEnabled: "watermark.enabled must be true or false.",
+    watermarkText: "watermark.text must be a string when provided.",
+    watermarkOpacity: "watermark.opacity must be a number from 0 to 1.",
+    watermarkSize: "watermark.size must be small, medium, or large.",
   },
 };

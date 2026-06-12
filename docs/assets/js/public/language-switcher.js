@@ -3,7 +3,7 @@ import {
   saveLocale,
   t,
   translateDocument,
-} from "../core/i18n.js";
+} from "../core/i18n.js?v=20260612-multiple-choice";
 
 const LANGUAGE_LABELS = {
   ru: "Русский",

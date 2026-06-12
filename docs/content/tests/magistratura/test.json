@@ -7,6 +7,12 @@
   "language": "ru",
   "instructions": "ясчя",
   "headerLinks": [],
+  "watermark": {
+    "enabled": true,
+    "text": "eSepte ONLINE",
+    "opacity": 0.08,
+    "size": "medium"
+  },
   "sections": [
     {
       "id": "math1",

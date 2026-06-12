@@ -1,9 +1,14 @@
 import { createQuestionFlow } from "../core/question-flow.js";
 import { createAttemptStorage } from "../core/attempt-storage.js";
-import { calculateAttemptProgress } from "../core/attempt-progress.js";
-import { t, tn } from "../core/i18n.js";
-import { calculateResult } from "../core/scoring.js";
-import { renderResults } from "./results-view.js";
+import { calculateAttemptProgress } from "../core/attempt-progress.js?v=20260612-multiple-choice";
+import {
+  isAnsweredValue,
+  normalizeQuestionAnswer,
+} from "../core/answers.js";
+import { t, tn } from "../core/i18n.js?v=20260612-multiple-choice";
+import { calculateResult } from "../core/scoring.js?v=20260612-multiple-choice";
+import { resolveWatermark } from "../core/watermark.js";
+import { renderResults } from "./results-view.js?v=20260612-multiple-choice";
 import { renderSocialBlock } from "./social-block.js";
 
 let mediaCaptionId = 0;
@@ -145,6 +150,28 @@ function createQuestionMedia(question, testUrl) {
   }
 
   return media;
+}
+
+function createQuestionWatermark(watermark) {
+  if (!watermark) {
+    return null;
+  }
+
+  const layer = createElement(
+    "div",
+    `question-watermark question-watermark--${watermark.size}`,
+  );
+  layer.setAttribute("aria-hidden", "true");
+  layer.style.setProperty(
+    "--watermark-opacity",
+    String(watermark.opacity),
+  );
+
+  for (let index = 0; index < 36; index += 1) {
+    layer.append(createElement("span", "", watermark.text));
+  }
+
+  return layer;
 }
 
 function createQuestionNavigator({
@@ -376,6 +403,7 @@ function createQuestionWorkspace({
   currentIndex,
   answers,
   testUrl,
+  watermark,
   onAnswer,
   onNavigate,
 }) {
@@ -423,27 +451,42 @@ function createQuestionWorkspace({
   const legend = createElement(
     "legend",
     "visually-hidden",
-    t("runner.chooseOne"),
+    question.type === "multiple-choice"
+      ? t("runner.chooseMany")
+      : t("runner.chooseOne"),
   );
   options.append(legend);
 
   question.options.forEach((option) => {
-    const label = createElement("label", "answer-option");
-    const radio = document.createElement("input");
+    const isMultiple = question.type === "multiple-choice";
+    const label = createElement(
+      "label",
+      `answer-option ${isMultiple ? "answer-option--multiple" : ""}`.trim(),
+    );
+    const input = document.createElement("input");
     const control = createElement("span", "answer-option__control");
     const text = createElement("span", "answer-option__text", option.text);
+    const selectedOptionIds = answers.get(question.id) ?? [];
 
-    radio.type = "radio";
-    radio.name = `answer-${question.id}`;
-    radio.value = option.id;
-    radio.checked = answers.get(question.id) === option.id;
-    radio.addEventListener("change", () => onAnswer(question.id, option.id));
+    input.type = isMultiple ? "checkbox" : "radio";
+    input.name = `answer-${question.id}`;
+    input.value = option.id;
+    input.checked = selectedOptionIds.includes(option.id);
+    input.addEventListener("change", () =>
+      onAnswer(question, option.id, input.checked),
+    );
 
-    label.append(radio, control, text);
+    label.append(input, control, text);
     options.append(label);
   });
 
   questionForm.append(options);
+
+  const watermarkLayer = createQuestionWatermark(watermark);
+  if (watermarkLayer) {
+    questionForm.classList.add("question-form--watermarked");
+    questionForm.append(watermarkLayer);
+  }
 
   const actions = createElement("div", "runner-actions");
   const previous = createElement(
@@ -558,21 +601,21 @@ function restoreAttempt(savedAttempt, test, flow) {
     return fallback;
   }
 
-  const validOptions = new Map(
-    flow.map(({ question }) => [
-      question.id,
-      new Set(question.options.map((option) => option.id)),
-    ]),
+  const questions = new Map(
+    flow.map(({ question }) => [question.id, question]),
   );
   const answers = new Map();
 
   if (isRecord(savedAttempt.answers)) {
-    Object.entries(savedAttempt.answers).forEach(([questionId, optionId]) => {
-      if (
-        typeof optionId === "string" &&
-        validOptions.get(questionId)?.has(optionId)
-      ) {
-        answers.set(questionId, optionId);
+    Object.entries(savedAttempt.answers).forEach(([questionId, value]) => {
+      const question = questions.get(questionId);
+
+      if (question) {
+        const selectedOptionIds = normalizeQuestionAnswer(question, value);
+
+        if (isAnsweredValue(selectedOptionIds)) {
+          answers.set(questionId, selectedOptionIds);
+        }
       }
     });
   }
@@ -597,6 +640,7 @@ function restoreAttempt(savedAttempt, test, flow) {
 
 export function renderTestRunner(container, test, testUrl) {
   const flow = createQuestionFlow(test);
+  const watermark = resolveWatermark(test);
   const storage = createAttemptStorage(test.id, test.version);
   const savedAttempt = storage.load();
   const hasCompatibleActiveAttempt =
@@ -858,18 +902,34 @@ export function renderTestRunner(container, test, testUrl) {
       render({ focusPrompt: true });
     };
 
-    const answer = (questionId, optionId) => {
-      answers.set(questionId, optionId);
+    const answer = (question, optionId, checked) => {
+      const currentAnswer = answers.get(question.id) ?? [];
+      const selectedOptionIds =
+        question.type === "multiple-choice"
+          ? checked
+            ? [...new Set([...currentAnswer, optionId])]
+            : currentAnswer.filter((selectedId) => selectedId !== optionId)
+          : [optionId];
+
+      if (selectedOptionIds.length > 0) {
+        answers.set(question.id, selectedOptionIds);
+      } else {
+        answers.delete(question.id);
+      }
+
       persistAttempt();
       updateActiveProgress();
       const navigationButton = container.querySelector(
-        `.question-nav-button[data-question-id="${CSS.escape(questionId)}"]`,
+        `.question-nav-button[data-question-id="${CSS.escape(question.id)}"]`,
       );
 
       if (navigationButton) {
-        navigationButton.classList.add("is-answered");
+        navigationButton.classList.toggle(
+          "is-answered",
+          selectedOptionIds.length > 0,
+        );
         const questionIndex = flow.findIndex(
-          ({ question }) => question.id === questionId,
+          ({ question: flowQuestion }) => flowQuestion.id === question.id,
         );
         navigationButton.setAttribute(
           "aria-label",
@@ -877,7 +937,7 @@ export function renderTestRunner(container, test, testUrl) {
             flow[questionIndex],
             questionIndex,
             flow.length,
-            true,
+            selectedOptionIds.length > 0,
           ),
         );
       }
@@ -940,6 +1000,7 @@ export function renderTestRunner(container, test, testUrl) {
       currentIndex,
       answers,
       testUrl,
+      watermark,
       onAnswer: answer,
       onNavigate: navigate,
     });

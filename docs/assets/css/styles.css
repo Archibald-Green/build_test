@@ -1253,6 +1253,13 @@ button,
   margin: 0;
 }
 
+.review-card__type-note {
+  margin: 0.65rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
 .review-card__section {
   color: var(--color-muted);
   font-size: 0.75rem;
@@ -1333,8 +1340,54 @@ button,
 }
 
 .question-form {
+  position: relative;
   min-height: 31rem;
   padding: clamp(1.5rem, 5vw, 3rem);
+  overflow: hidden;
+}
+
+.question-form--watermarked > :not(.question-watermark) {
+  position: relative;
+  z-index: 1;
+}
+
+.question-watermark {
+  position: absolute;
+  z-index: 2;
+  inset: -3rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(8rem, 1fr));
+  grid-auto-rows: 5.5rem;
+  align-items: center;
+  justify-items: center;
+  overflow: hidden;
+  color: var(--color-text);
+  opacity: var(--watermark-opacity, 0.08);
+  pointer-events: none;
+  user-select: none;
+}
+
+.question-watermark span {
+  display: block;
+  max-width: 12rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+  text-align: center;
+  transform: rotate(-24deg);
+  white-space: nowrap;
+}
+
+.question-watermark--small span {
+  font-size: 0.78rem;
+}
+
+.question-watermark--medium span {
+  font-size: 1rem;
+}
+
+.question-watermark--large span {
+  font-size: 1.25rem;
 }
 
 .question-form__prompt {
@@ -1498,6 +1551,24 @@ button,
 
 .answer-option input:checked + .answer-option__control {
   border: 0.38rem solid var(--color-accent);
+}
+
+.answer-option--multiple .answer-option__control {
+  border-radius: 0.3rem;
+}
+
+.answer-option--multiple input:checked + .answer-option__control {
+  border: 2px solid var(--color-accent);
+  background: var(--color-accent);
+}
+
+.answer-option--multiple input:checked + .answer-option__control::after {
+  width: 0.32rem;
+  height: 0.62rem;
+  border: solid #fff;
+  border-width: 0 0.16rem 0.16rem 0;
+  content: "";
+  transform: translateY(-0.08rem) rotate(45deg);
 }
 
 .answer-option__text {
@@ -1788,6 +1859,12 @@ button,
 
   .question-form {
     min-height: 0;
+  }
+
+  .question-watermark {
+    inset: -2rem;
+    grid-template-columns: repeat(2, minmax(7rem, 1fr));
+    grid-auto-rows: 4.75rem;
   }
 
   .page-intro h1,

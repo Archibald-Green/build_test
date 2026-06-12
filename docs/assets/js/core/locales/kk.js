@@ -132,6 +132,7 @@ export const kk = {
     resetSection: "Ағымдағы бөлімді тазарту",
     resetTest: "Тестті қайта тапсыру",
     chooseOne: "Бір жауапты таңдаңыз",
+    chooseMany: "Бір немесе бірнеше жауапты таңдаңыз",
     previous: "Артқа",
     next: "Келесі",
     storageTitle: "Ілгерілеу сақталмады",
@@ -162,7 +163,10 @@ export const kk = {
     sectionUnavailable: "Бөлім қолжетімсіз",
     questionUnavailable: "Сұрақ қолжетімсіз",
     yourAnswer: "Сіздің жауабыңыз",
+    yourAnswers: "Сіздің жауаптарыңыз",
     correctAnswer: "Дұрыс жауап",
+    correctAnswers: "Дұрыс жауаптар",
+    multipleChoiceNote: "Бұл сұрақта бірнеше дұрыс жауап болуы мүмкін.",
     explanation: "Түсіндірме",
     points: "Ұпай",
     noAnswer: "Жауап таңдалмаған",
@@ -205,13 +209,19 @@ export const kk = {
     object: "{path} объект болуы керек.",
     duplicateQuestion: "{path}.id «{id}» сұрақ ID-сін қайталайды.",
     questionType:
-      "{path}.type схема нұсқасы 1 үшін «single-choice» болуы керек.",
+      "{path}.type «single-choice» немесе «multiple-choice» болуы керек.",
     required: "{path} өрісі міндетті.",
     points: "{path}.points нөлден үлкен сан болуы керек.",
     options: "{path}.options кемінде екі нұсқадан тұруы керек.",
     duplicateOption: "{path}.id «{id}» нұсқа ID-сін қайталайды.",
-    correctOptionCount:
+    correctOptionsArray:
+      "{path}.correctOptionIds массив болуы керек.",
+    correctOptionCountSingle:
       "{path}.correctOptionIds дәл бір нұсқа ID-сін қамтуы керек.",
+    correctOptionCountMultiple:
+      "{path}.correctOptionIds кемінде бір нұсқа ID-сін қамтуы керек.",
+    duplicateCorrectOption:
+      "{path}.correctOptionIds қайталанатын ID-лерді қамтымауы керек.",
     missingCorrectOption:
       "{path}.correctOptionIds жоқ нұсқаға сілтеме жасайды.",
     testsArray: "tests өрісі массив болуы керек.",
@@ -235,5 +245,10 @@ export const kk = {
     socialStyle:
       "{path}.style telegram, whatsapp, primary немесе secondary болуы керек.",
     socialUrl: "{path}.url дұрыс сыртқы HTTP(S) мекенжайы болуы керек.",
+    watermarkObject: "watermark көрсетілсе, объект болуы керек.",
+    watermarkEnabled: "watermark.enabled true немесе false болуы керек.",
+    watermarkText: "watermark.text көрсетілсе, жол болуы керек.",
+    watermarkOpacity: "watermark.opacity 0 мен 1 аралығындағы сан болуы керек.",
+    watermarkSize: "watermark.size small, medium немесе large болуы керек.",
   },
 };

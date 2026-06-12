@@ -3,12 +3,21 @@ import test from "node:test";
 
 import { getLocale, setLocale, t, tn } from "../docs/assets/js/core/i18n.js";
 import { calculateAttemptProgress } from "../docs/assets/js/core/attempt-progress.js";
+import {
+  normalizeQuestionAnswer,
+  optionSetsMatch,
+  toOptionIdArray,
+} from "../docs/assets/js/core/answers.js";
 import { createQuestionFlow } from "../docs/assets/js/core/question-flow.js";
 import { calculateResult } from "../docs/assets/js/core/scoring.js";
 import {
   validateCatalog,
   validateTest,
 } from "../docs/assets/js/core/test-validator.js";
+import {
+  DEFAULT_WATERMARK,
+  resolveWatermark,
+} from "../docs/assets/js/core/watermark.js";
 
 function createTest() {
   return {
@@ -56,14 +65,15 @@ function createTest() {
           },
           {
             id: "second-2",
-            type: "single-choice",
+            type: "multiple-choice",
             prompt: "Third question",
             options: [
               { id: "a", text: "A" },
               { id: "b", text: "B" },
+              { id: "c", text: "C" },
             ],
-            correctOptionIds: ["a"],
-            explanation: "A is correct.",
+            correctOptionIds: ["a", "c"],
+            explanation: "A and C are correct.",
           },
         ],
       },
@@ -153,6 +163,96 @@ test("validates optional social blocks without breaking older tests", () => {
   });
 });
 
+test("validates optional watermark settings without breaking older tests", () => {
+  const olderFixture = createTest();
+  assert.equal(validateTest(olderFixture), olderFixture);
+
+  const watermarkFixture = createTest();
+  watermarkFixture.watermark = {
+    enabled: true,
+    text: "eSepte ONLINE",
+    opacity: 0.08,
+    size: "medium",
+  };
+  assert.equal(validateTest(watermarkFixture), watermarkFixture);
+
+  watermarkFixture.watermark.opacity = 1.2;
+  assert.throws(() => validateTest(watermarkFixture), {
+    code: "TEST_SCHEMA_INVALID",
+  });
+
+  watermarkFixture.watermark.opacity = 0.08;
+  watermarkFixture.watermark.size = "huge";
+  assert.throws(() => validateTest(watermarkFixture), {
+    code: "TEST_SCHEMA_INVALID",
+  });
+});
+
+test("validates single-choice and multiple-choice correct option rules", () => {
+  const fixture = createTest();
+  assert.equal(validateTest(fixture), fixture);
+
+  fixture.sections[0].questions[0].correctOptionIds = ["a", "b"];
+  assert.throws(() => validateTest(fixture), {
+    code: "TEST_SCHEMA_INVALID",
+  });
+
+  const emptyMultiple = createTest();
+  emptyMultiple.sections[1].questions[1].correctOptionIds = [];
+  assert.throws(() => validateTest(emptyMultiple), {
+    code: "TEST_SCHEMA_INVALID",
+  });
+
+  const missingOption = createTest();
+  missingOption.sections[1].questions[1].correctOptionIds = ["a", "missing"];
+  assert.throws(() => validateTest(missingOption), {
+    code: "TEST_SCHEMA_INVALID",
+  });
+});
+
+test("normalizes legacy strings and compares option sets exactly", () => {
+  const multipleQuestion = createTest().sections[1].questions[1];
+
+  assert.deepEqual(toOptionIdArray("a"), ["a"]);
+  assert.deepEqual(
+    normalizeQuestionAnswer(multipleQuestion, ["c", "a", "missing"]),
+    ["c", "a"],
+  );
+  assert.equal(optionSetsMatch(["a", "c"], ["c", "a"]), true);
+  assert.equal(optionSetsMatch(["a"], ["a", "c"]), false);
+  assert.equal(optionSetsMatch(["a", "b", "c"], ["a", "c"]), false);
+});
+
+test("resolves global, test-specific, and disabled watermark settings", () => {
+  const defaultFixture = createTest();
+  assert.deepEqual(resolveWatermark(defaultFixture), DEFAULT_WATERMARK);
+
+  const configuredFixture = createTest();
+  configuredFixture.watermark = {
+    enabled: true,
+    text: "Configured watermark",
+    opacity: 0.18,
+    size: "large",
+  };
+  assert.deepEqual(resolveWatermark(configuredFixture), {
+    enabled: true,
+    text: "Configured watermark",
+    opacity: 0.18,
+    size: "large",
+  });
+
+  const titleFallbackFixture = createTest();
+  titleFallbackFixture.watermark = { enabled: true };
+  assert.equal(
+    resolveWatermark(titleFallbackFixture).text,
+    titleFallbackFixture.title,
+  );
+
+  const disabledFixture = createTest();
+  disabledFixture.watermark = { enabled: false };
+  assert.equal(resolveWatermark(disabledFixture), null);
+});
+
 test("creates a dynamic ordered flow for every section and question", () => {
   const flow = createQuestionFlow(createTest());
 
@@ -171,8 +271,8 @@ test("creates a dynamic ordered flow for every section and question", () => {
 test("calculates completion progress from answers instead of navigation", () => {
   const flow = createQuestionFlow(createTest());
   const answers = new Map([
-    ["first-1", "a"],
-    ["second-2", "a"],
+    ["first-1", ["a"]],
+    ["second-2", ["a", "c"]],
   ]);
   const progress = calculateAttemptProgress(flow, answers, "second");
 
@@ -194,8 +294,8 @@ test("scores correct, incorrect, and unanswered answers by section", () => {
   const result = calculateResult(
     createTest(),
     new Map([
-      ["first-1", "a"],
-      ["second-1", "a"],
+      ["first-1", ["a"]],
+      ["second-1", ["a"]],
     ]),
   );
 
@@ -217,4 +317,30 @@ test("scores correct, incorrect, and unanswered answers by section", () => {
       [0, 3],
     ],
   );
+});
+
+test("awards multiple-choice points only for an exact selected set", () => {
+  const fixture = createTest();
+
+  const exact = calculateResult(
+    fixture,
+    new Map([["second-2", ["c", "a"]]]),
+  );
+  const missing = calculateResult(
+    fixture,
+    new Map([["second-2", ["a"]]]),
+  );
+  const extra = calculateResult(
+    fixture,
+    new Map([["second-2", ["a", "b", "c"]]]),
+  );
+
+  assert.equal(exact.questions[2].status, "correct");
+  assert.equal(exact.questions[2].earnedPoints, 1);
+  assert.deepEqual(exact.questions[2].selectedOptionIds, ["c", "a"]);
+  assert.deepEqual(exact.questions[2].correctOptionIds, ["a", "c"]);
+  assert.equal(missing.questions[2].status, "incorrect");
+  assert.equal(missing.questions[2].earnedPoints, 0);
+  assert.equal(extra.questions[2].status, "incorrect");
+  assert.equal(extra.questions[2].earnedPoints, 0);
 });

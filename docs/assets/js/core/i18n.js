@@ -1,5 +1,5 @@
-import { en } from "./locales/en.js";
-import { kk } from "./locales/kk.js";
+import { en } from "./locales/en.js?v=20260612-multiple-choice";
+import { kk } from "./locales/kk.js?v=20260612-multiple-choice";
 
 export const DEFAULT_LOCALE = "ru";
 export const UI_LANGUAGE_KEY = "test-platform:ui-language";
@@ -142,6 +142,7 @@ const dictionaries = {
       resetSection: "Сбросить текущий раздел",
       resetTest: "Пройти тест заново",
       chooseOne: "Выберите один ответ",
+      chooseMany: "Выберите один или несколько ответов",
       previous: "Назад",
       next: "Далее",
       storageTitle: "Не удалось сохранить прогресс",
@@ -172,7 +173,10 @@ const dictionaries = {
       sectionUnavailable: "Раздел недоступен",
       questionUnavailable: "Вопрос недоступен",
       yourAnswer: "Ваш ответ",
+      yourAnswers: "Ваши ответы",
       correctAnswer: "Правильный ответ",
+      correctAnswers: "Правильные ответы",
+      multipleChoiceNote: "В этом вопросе может быть несколько правильных ответов.",
       explanation: "Объяснение",
       points: "Баллы",
       noAnswer: "Ответ не выбран",
@@ -215,13 +219,19 @@ const dictionaries = {
       object: "{path} должен быть объектом.",
       duplicateQuestion: "{path}.id повторяет ID вопроса «{id}».",
       questionType:
-        "{path}.type должен быть равен «single-choice» в версии схемы 1.",
+        "{path}.type должен быть равен «single-choice» или «multiple-choice».",
       required: "Поле {path} обязательно.",
       points: "{path}.points должен быть числом больше нуля.",
       options: "{path}.options должен содержать не менее двух вариантов.",
       duplicateOption: "{path}.id повторяет ID варианта «{id}».",
-      correctOptionCount:
+      correctOptionsArray:
+        "{path}.correctOptionIds должен быть массивом.",
+      correctOptionCountSingle:
         "{path}.correctOptionIds должен содержать ровно один ID варианта для вопроса с одним ответом.",
+      correctOptionCountMultiple:
+        "{path}.correctOptionIds должен содержать хотя бы один ID варианта для вопроса с несколькими ответами.",
+      duplicateCorrectOption:
+        "{path}.correctOptionIds не должен содержать повторяющиеся ID.",
       missingCorrectOption:
         "{path}.correctOptionIds ссылается на несуществующий вариант.",
       testsArray: "Поле tests должно быть массивом.",
@@ -250,6 +260,16 @@ const dictionaries = {
         "{path}.style должен быть равен telegram, whatsapp, primary или secondary.",
       socialUrl:
         "{path}.url должен быть корректным внешним HTTP(S)-адресом.",
+      watermarkObject:
+        "Поле watermark должно быть объектом, если оно указано.",
+      watermarkEnabled:
+        "Поле watermark.enabled должно быть true или false.",
+      watermarkText:
+        "Поле watermark.text должно быть строкой, если оно указано.",
+      watermarkOpacity:
+        "Поле watermark.opacity должно быть числом от 0 до 1.",
+      watermarkSize:
+        "Поле watermark.size должно быть равно small, medium или large.",
     },
   },
   kk,

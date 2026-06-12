@@ -1,4 +1,7 @@
-import { formatDateTime, t } from "../core/i18n.js";
+import {
+  formatDateTime,
+  t,
+} from "../core/i18n.js?v=20260612-multiple-choice";
 import { renderSocialBlock } from "./social-block.js";
 
 const STATUS_META = {
@@ -49,14 +52,24 @@ function getQuestionLookup(test) {
   );
 }
 
-function getOptionText(question, optionId, fallback) {
-  if (!optionId) {
+function getOptionTexts(question, optionIds, fallback) {
+  const ids = Array.isArray(optionIds)
+    ? optionIds
+    : typeof optionIds === "string"
+      ? [optionIds]
+      : [];
+
+  if (ids.length === 0) {
     return fallback;
   }
 
-  return (
-    question.options.find((option) => option.id === optionId)?.text ?? fallback
+  const texts = ids.map(
+    (optionId) =>
+      question.options.find((option) => option.id === optionId)?.text ??
+      fallback,
   );
+
+  return texts.join(" • ");
 }
 
 function createCountCard(status, value) {
@@ -148,15 +161,30 @@ function createReviewCard(questionResult, lookup, index) {
   );
   header.append(status, sectionTitle, prompt);
 
+  if (question?.type === "multiple-choice") {
+    header.append(
+      createElement(
+        "p",
+        "review-card__type-note",
+        t("results.multipleChoiceNote"),
+      ),
+    );
+  }
+
   const details = createElement("dl", "review-details");
+  const selectedOptionIds =
+    questionResult.selectedOptionIds ?? questionResult.selectedOptionId;
+  const correctOptionIds =
+    questionResult.correctOptionIds ?? questionResult.correctOptionId;
+  const multiple = question?.type === "multiple-choice";
 
   const rows = [
     [
-      t("results.yourAnswer"),
+      multiple ? t("results.yourAnswers") : t("results.yourAnswer"),
       question
-        ? getOptionText(
+        ? getOptionTexts(
             question,
-            questionResult.selectedOptionId,
+            selectedOptionIds,
             questionResult.status === "unanswered"
               ? t("results.noAnswer")
               : t("results.answerUnavailable"),
@@ -164,11 +192,11 @@ function createReviewCard(questionResult, lookup, index) {
         : t("results.answerUnavailable"),
     ],
     [
-      t("results.correctAnswer"),
+      multiple ? t("results.correctAnswers") : t("results.correctAnswer"),
       question
-        ? getOptionText(
+        ? getOptionTexts(
             question,
-            questionResult.correctOptionId,
+            correctOptionIds,
             t("results.answerUnavailable"),
           )
         : t("results.answerUnavailable"),

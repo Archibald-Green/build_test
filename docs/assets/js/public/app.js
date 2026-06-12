@@ -5,11 +5,14 @@ import {
   setLocale,
   t,
   translateDocument,
-} from "../core/i18n.js";
-import { validateCatalog, validateTest } from "../core/test-validator.js";
+} from "../core/i18n.js?v=20260612-multiple-choice";
+import {
+  validateCatalog,
+  validateTest,
+} from "../core/test-validator.js?v=20260612-multiple-choice";
 import { renderCatalog } from "./catalog-view.js";
 import { initializeLanguageSwitcher } from "./language-switcher.js";
-import { renderTestRunner } from "./test-runner-view.js";
+import { renderTestRunner } from "./test-runner-view.js?v=20260612-multiple-choice";
 
 const app = document.querySelector("#app");
 const catalogUrl = new URL("../../../content/tests/index.json", import.meta.url);

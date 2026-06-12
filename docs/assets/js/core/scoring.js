@@ -1,3 +1,9 @@
+import {
+  isAnsweredValue,
+  normalizeQuestionAnswer,
+  optionSetsMatch,
+} from "./answers.js";
+
 function getAnswersObject(answers) {
   return answers instanceof Map ? Object.fromEntries(answers) : answers ?? {};
 }
@@ -33,14 +39,16 @@ export function calculateResult(test, answers) {
 
     section.questions.forEach((question) => {
       const questionPoints = getQuestionPoints(question);
-      const selectedOptionId = answerMap[question.id] ?? null;
-      const correctOptionId = question.correctOptionIds[0];
-      const status =
-        selectedOptionId === null
-          ? "unanswered"
-          : selectedOptionId === correctOptionId
-            ? "correct"
-            : "incorrect";
+      const selectedOptionIds = normalizeQuestionAnswer(
+        question,
+        answerMap[question.id],
+      );
+      const correctOptionIds = [...question.correctOptionIds];
+      const status = !isAnsweredValue(selectedOptionIds)
+        ? "unanswered"
+        : optionSetsMatch(selectedOptionIds, correctOptionIds)
+          ? "correct"
+          : "incorrect";
       const questionEarnedPoints =
         status === "correct" ? questionPoints : 0;
 
@@ -54,9 +62,10 @@ export function calculateResult(test, answers) {
       questions.push({
         questionId: question.id,
         sectionId: section.id,
+        questionType: question.type,
         status,
-        selectedOptionId,
-        correctOptionId,
+        selectedOptionIds,
+        correctOptionIds,
         earnedPoints: questionEarnedPoints,
         totalPoints: questionPoints,
       });
