@@ -10,6 +10,16 @@
       "sectionCount": 3,
       "questionCount": 6,
       "published": true
+    },
+    {
+      "id": "magistratura",
+      "title": "Тест",
+      "description": "Тест",
+      "file": "magistratura/test.json",
+      "language": "ru",
+      "sectionCount": 2,
+      "questionCount": 2,
+      "published": true
     }
   ]
 }

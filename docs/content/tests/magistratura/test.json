@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "id": "magistratura",
+  "version": 1,
+  "title": "Тест",
+  "description": "Тест",
+  "language": "ru",
+  "instructions": "ясчя",
+  "headerLinks": [],
+  "sections": [
+    {
+      "id": "math1",
+      "title": "Математика",
+      "description": "чсячсчя",
+      "questions": [
+        {
+          "id": "math1",
+          "type": "single-choice",
+          "prompt": "Что такое плюс ",
+          "points": 2,
+          "options": [
+            {
+              "id": "a",
+              "text": "плюс "
+            },
+            {
+              "id": "b",
+              "text": "минус "
+            },
+            {
+              "id": "c",
+              "text": "равно "
+            },
+            {
+              "id": "d",
+              "text": "равно "
+            },
+            {
+              "id": "e",
+              "text": "равно"
+            }
+          ],
+          "correctOptionIds": [
+            "a"
+          ],
+          "explanation": "плюс",
+          "media": {
+            "image": {
+              "src": "media/0fbc10f653a033958c0264c9245fd1fe.jpg",
+              "alt": "df"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "eng",
+      "title": "English",
+      "description": "eng",
+      "questions": [
+        {
+          "id": "eng1",
+          "type": "single-choice",
+          "prompt": "plus",
+          "points": 1,
+          "options": [
+            {
+              "id": "a",
+              "text": "plus"
+            },
+            {
+              "id": "b",
+              "text": "minus"
+            }
+          ],
+          "correctOptionIds": [
+            "a"
+          ],
+          "explanation": "сячсчс",
+          "media": {
+            "audio": {
+              "src": "media/povernite-nalevoja.mp3",
+              "caption": ""
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
