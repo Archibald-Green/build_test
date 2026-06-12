@@ -1,4 +1,5 @@
 import { formatDateTime, t } from "../core/i18n.js";
+import { renderSocialBlock } from "./social-block.js";
 
 const STATUS_META = {
   correct: {
@@ -204,6 +205,8 @@ export function renderResults(
     submittedAt,
     storageAvailable,
     onReset,
+    reviewOpen = false,
+    onReviewOpen,
   },
 ) {
   const lookup = getQuestionLookup(test);
@@ -281,7 +284,7 @@ export function renderResults(
   const reviewButton = createElement(
     "button",
     "runner-button runner-button--primary",
-    t("results.reviewAnswers"),
+    reviewOpen ? t("results.reviewShown") : t("results.reviewAnswers"),
   );
   const resetButton = createElement(
     "button",
@@ -290,13 +293,14 @@ export function renderResults(
   );
   reviewButton.type = "button";
   reviewButton.setAttribute("aria-controls", "answer-review");
-  reviewButton.setAttribute("aria-expanded", "false");
+  reviewButton.setAttribute("aria-expanded", reviewOpen ? "true" : "false");
+  reviewButton.disabled = reviewOpen;
   resetButton.type = "button";
   actions.append(reviewButton, resetButton);
 
   const review = createElement("section", "answer-review");
   review.id = "answer-review";
-  review.hidden = true;
+  review.hidden = !reviewOpen;
   const reviewHeader = createElement("div", "answer-review__header");
   const reviewHeading = createElement("h2", "", t("results.reviewTitle"));
   const reviewCopy = createElement(
@@ -312,6 +316,7 @@ export function renderResults(
   review.append(reviewHeader, reviewList);
 
   reviewButton.addEventListener("click", () => {
+    onReviewOpen?.();
     review.hidden = false;
     reviewButton.setAttribute("aria-expanded", "true");
     reviewButton.textContent = t("results.reviewShown");
@@ -328,12 +333,13 @@ export function renderResults(
     ? t("results.saved")
     : t("results.notSaved");
 
-  container.append(
-    backLink,
-    hero,
-    dashboard,
-    actions,
-    review,
-    savedNotice,
-  );
+  const content = [backLink, hero];
+  const socialBlock = renderSocialBlock(test);
+
+  if (socialBlock) {
+    content.push(socialBlock);
+  }
+
+  content.push(dashboard, actions, review, savedNotice);
+  container.append(...content);
 }

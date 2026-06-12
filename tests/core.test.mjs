@@ -103,7 +103,7 @@ test("rejects unsafe media paths", () => {
   });
 });
 
-test("uses Russian interface translations and plural forms by default", () => {
+test("supports Russian, Kazakh, and English interface dictionaries", () => {
   setLocale("ru");
 
   assert.equal(getLocale(), "ru");
@@ -111,6 +111,46 @@ test("uses Russian interface translations and plural forms by default", () => {
   assert.equal(tn("catalog.question", 1), "1 вопрос");
   assert.equal(tn("catalog.question", 2), "2 вопроса");
   assert.equal(tn("catalog.question", 5), "5 вопросов");
+
+  setLocale("kk");
+  assert.equal(t("runner.next"), "Келесі");
+  assert.equal(tn("catalog.question", 5), "5 сұрақ");
+
+  setLocale("en");
+  assert.equal(t("runner.next"), "Next");
+  assert.equal(tn("catalog.question", 1), "1 question");
+  assert.equal(tn("catalog.question", 5), "5 questions");
+
+  setLocale("ru");
+});
+
+test("validates optional social blocks without breaking older tests", () => {
+  const olderFixture = createTest();
+  assert.equal(validateTest(olderFixture), olderFixture);
+
+  const socialFixture = createTest();
+  socialFixture.socialBlock = {
+    enabled: true,
+    title: "More tests",
+    links: [
+      {
+        label: "Telegram",
+        url: "https://example.com/channel",
+        style: "telegram",
+      },
+      {
+        label: "WhatsApp",
+        url: "https://example.com/chat",
+        style: "whatsapp",
+      },
+    ],
+  };
+  assert.equal(validateTest(socialFixture), socialFixture);
+
+  socialFixture.socialBlock.links[0].url = "javascript:alert(1)";
+  assert.throws(() => validateTest(socialFixture), {
+    code: "TEST_SCHEMA_INVALID",
+  });
 });
 
 test("creates a dynamic ordered flow for every section and question", () => {

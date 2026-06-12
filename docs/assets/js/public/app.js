@@ -1,20 +1,24 @@
 import { toAppError, AppError } from "../core/errors.js";
 import { fetchJson } from "../core/fetch-json.js";
 import {
-  DEFAULT_LOCALE,
+  loadSavedLocale,
   setLocale,
   t,
   translateDocument,
 } from "../core/i18n.js";
 import { validateCatalog, validateTest } from "../core/test-validator.js";
 import { renderCatalog } from "./catalog-view.js";
+import { initializeLanguageSwitcher } from "./language-switcher.js";
 import { renderTestRunner } from "./test-runner-view.js";
 
 const app = document.querySelector("#app");
 const catalogUrl = new URL("../../../content/tests/index.json", import.meta.url);
 
-setLocale(DEFAULT_LOCALE);
+let rerenderCurrentView = () => {};
+
+setLocale(loadSavedLocale());
 translateDocument();
+initializeLanguageSwitcher(() => rerenderCurrentView());
 
 function renderError(error) {
   const appError = toAppError(error);
@@ -95,6 +99,7 @@ function renderError(error) {
   title.focus();
 
   console.error(appError);
+  rerenderCurrentView = () => initialize();
 }
 
 function getRequestedTestId() {
@@ -148,7 +153,11 @@ async function loadSelectedTest(catalog, testId) {
   }
 
   document.title = `${test.title} | OpenTest`;
-  renderTestRunner(app, test, testUrl);
+  const controller = renderTestRunner(app, test, testUrl);
+  rerenderCurrentView = () => {
+    document.title = `${test.title} | OpenTest`;
+    controller.rerender();
+  };
 }
 
 async function initialize() {
@@ -169,6 +178,10 @@ async function initialize() {
 
     document.title = t("meta.catalogTitle");
     renderCatalog(app, catalog);
+    rerenderCurrentView = () => {
+      document.title = t("meta.catalogTitle");
+      renderCatalog(app, catalog);
+    };
   } catch (error) {
     renderError(error);
   }

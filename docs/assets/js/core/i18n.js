@@ -1,4 +1,9 @@
+import { en } from "./locales/en.js";
+import { kk } from "./locales/kk.js";
+
 export const DEFAULT_LOCALE = "ru";
+export const UI_LANGUAGE_KEY = "test-platform:ui-language";
+export const SUPPORTED_LOCALES = ["ru", "kk", "en"];
 
 const dictionaries = {
   ru: {
@@ -18,6 +23,8 @@ const dictionaries = {
       footerPlatform: "Статическая тестовая платформа",
       footerAccount: "Регистрация не требуется",
       noscript: "Для загрузки каталога тестов OpenTest требуется JavaScript.",
+      languageSwitcher: "Язык интерфейса",
+      languageChanged: "Язык интерфейса изменён",
     },
     catalog: {
       title: "Выберите тренировочный тест",
@@ -232,8 +239,21 @@ const dictionaries = {
       descriptionText:
         "{path}.description должен быть строкой, если он указан.",
       questions: "{path}.questions должен содержать хотя бы один вопрос.",
+      socialBlockObject: "Поле socialBlock должно быть объектом, если оно указано.",
+      socialEnabled:
+        "Поле socialBlock.enabled должно быть true или false.",
+      socialTitle:
+        "Поле socialBlock.title обязательно, когда социальный блок включён.",
+      socialLinks:
+        "Поле socialBlock.links должно быть непустым массивом, когда социальный блок включён.",
+      socialStyle:
+        "{path}.style должен быть равен telegram, whatsapp, primary или secondary.",
+      socialUrl:
+        "{path}.url должен быть корректным внешним HTTP(S)-адресом.",
     },
   },
+  kk,
+  en,
 };
 
 let currentLocale = DEFAULT_LOCALE;
@@ -248,7 +268,14 @@ function interpolate(template, variables) {
   );
 }
 
-function getPluralForm(count) {
+function getPluralForm(count, locale = currentLocale) {
+  if (locale === "en") {
+    return Math.abs(count) === 1 ? "one" : "many";
+  }
+  if (locale === "kk") {
+    return "many";
+  }
+
   const absolute = Math.abs(count);
   const mod10 = absolute % 10;
   const mod100 = absolute % 100;
@@ -270,6 +297,30 @@ export function setLocale(locale) {
   }
 }
 
+export function loadSavedLocale() {
+  try {
+    const saved = window.localStorage.getItem(UI_LANGUAGE_KEY);
+    return SUPPORTED_LOCALES.includes(saved) ? saved : DEFAULT_LOCALE;
+  } catch {
+    return DEFAULT_LOCALE;
+  }
+}
+
+export function saveLocale(locale) {
+  const normalized = SUPPORTED_LOCALES.includes(locale)
+    ? locale
+    : DEFAULT_LOCALE;
+  setLocale(normalized);
+
+  try {
+    window.localStorage.setItem(UI_LANGUAGE_KEY, normalized);
+  } catch {
+    // Language switching still works for the current page session.
+  }
+
+  return normalized;
+}
+
 export function getLocale() {
   return currentLocale;
 }
@@ -287,11 +338,21 @@ export function t(key, variables = {}, locale = currentLocale) {
 }
 
 export function tn(key, count, variables = {}, locale = currentLocale) {
-  return t(`${key}.${getPluralForm(count)}`, { count, ...variables }, locale);
+  return t(
+    `${key}.${getPluralForm(count, locale)}`,
+    { count, ...variables },
+    locale,
+  );
 }
 
 export function formatDateTime(value, locale = currentLocale) {
-  return new Intl.DateTimeFormat(locale === "ru" ? "ru-RU" : locale, {
+  const localeTag = {
+    ru: "ru-RU",
+    kk: "kk-KZ",
+    en: "en-US",
+  }[locale] ?? locale;
+
+  return new Intl.DateTimeFormat(localeTag, {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));

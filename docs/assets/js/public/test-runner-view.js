@@ -4,6 +4,7 @@ import { calculateAttemptProgress } from "../core/attempt-progress.js";
 import { t, tn } from "../core/i18n.js";
 import { calculateResult } from "../core/scoring.js";
 import { renderResults } from "./results-view.js";
+import { renderSocialBlock } from "./social-block.js";
 
 let mediaCaptionId = 0;
 
@@ -619,6 +620,7 @@ export function renderTestRunner(container, test, testUrl) {
   let submitted = hasCompatibleSubmittedAttempt;
   let submittedAt = submitted ? savedAttempt.submittedAt : null;
   let result = submitted ? savedAttempt.result : null;
+  let reviewOpen = false;
   const restoredCurrent = flow[currentIndex];
   const savedAnswerCount = isRecord(savedAttempt?.answers)
     ? Object.keys(savedAttempt.answers).length
@@ -747,6 +749,7 @@ export function renderTestRunner(container, test, testUrl) {
     submitted = false;
     submittedAt = null;
     result = null;
+    reviewOpen = false;
 
     if (persist) {
       persistAttempt();
@@ -800,6 +803,10 @@ export function renderTestRunner(container, test, testUrl) {
       submittedAt,
       storageAvailable: storage.available,
       onReset: resetEntireTest,
+      reviewOpen,
+      onReviewOpen: () => {
+        reviewOpen = true;
+      },
     });
   }
 
@@ -939,6 +946,11 @@ export function renderTestRunner(container, test, testUrl) {
 
     layout.append(sidebar, workspace);
     const content = [backLink, runnerHeading];
+    const socialBlock = renderSocialBlock(test);
+
+    if (socialBlock) {
+      content.push(socialBlock);
+    }
 
     if (!storage.available) {
       content.push(createStorageWarning());
@@ -954,4 +966,15 @@ export function renderTestRunner(container, test, testUrl) {
   }
 
   showRunner();
+
+  return {
+    rerender() {
+      if (submitted) {
+        renderSubmittedResults();
+        return;
+      }
+
+      showRunner();
+    },
+  };
 }

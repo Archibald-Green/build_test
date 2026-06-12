@@ -4,6 +4,12 @@ import { t } from "./i18n.js";
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SUPPORTED_SCHEMA_VERSION = 1;
 const SUPPORTED_QUESTION_TYPES = new Set(["single-choice"]);
+const SUPPORTED_SOCIAL_STYLES = new Set([
+  "telegram",
+  "whatsapp",
+  "primary",
+  "secondary",
+]);
 
 function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -27,6 +33,71 @@ function isSafeRelativePath(value) {
     !normalized.startsWith("//") &&
     !normalized.split("/").includes("..")
   );
+}
+
+function isSafeExternalUrl(value) {
+  if (!hasText(value)) {
+    return false;
+  }
+
+  try {
+    return ["http:", "https:"].includes(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+}
+
+function validateSocialBlock(socialBlock, issues) {
+  if (socialBlock === undefined) {
+    return;
+  }
+
+  if (!isRecord(socialBlock)) {
+    issues.push(t("validation.socialBlockObject"));
+    return;
+  }
+
+  if (typeof socialBlock.enabled !== "boolean") {
+    issues.push(t("validation.socialEnabled"));
+  }
+
+  if (socialBlock.enabled && !hasText(socialBlock.title)) {
+    issues.push(t("validation.socialTitle"));
+  } else if (
+    socialBlock.title !== undefined &&
+    typeof socialBlock.title !== "string"
+  ) {
+    issues.push(t("validation.socialTitle"));
+  }
+
+  if (!Array.isArray(socialBlock.links)) {
+    if (socialBlock.enabled) {
+      issues.push(t("validation.socialLinks"));
+    }
+    return;
+  }
+
+  if (socialBlock.enabled && socialBlock.links.length === 0) {
+    issues.push(t("validation.socialLinks"));
+  }
+
+  socialBlock.links.forEach((link, index) => {
+    const path = `socialBlock.links[${index}]`;
+
+    if (!isRecord(link)) {
+      issues.push(t("validation.object", { path }));
+      return;
+    }
+    if (!hasText(link.label)) {
+      issues.push(t("validation.required", { path: `${path}.label` }));
+    }
+    if (!isSafeExternalUrl(link.url)) {
+      issues.push(t("validation.socialUrl", { path }));
+    }
+    if (!SUPPORTED_SOCIAL_STYLES.has(link.style)) {
+      issues.push(t("validation.socialStyle", { path }));
+    }
+  });
 }
 
 function validateId(value, path, issues) {
@@ -287,6 +358,8 @@ export function validateTest(test) {
       }
     });
   }
+
+  validateSocialBlock(test.socialBlock, issues);
 
   if (!Array.isArray(test.sections) || test.sections.length === 0) {
     issues.push(t("validation.sections"));
